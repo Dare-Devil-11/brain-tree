@@ -306,15 +306,10 @@ setTimeout(()=>sel('root'),900);
   var lGeo2=new THREE.BufferGeometry();
   lGeo2.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lv2),3));
   scene.add(new THREE.LineSegments(lGeo2,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.07})));
-  // Scan sweep — subtle
-  var swGeo=new THREE.PlaneGeometry(30,.2);
-  var swMat=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.07,side:THREE.DoubleSide});
-  var sw=new THREE.Mesh(swGeo,swMat);scene.add(sw);
-  var sy=-11,sd=1,t=0;
+  var t=0;
   function tick(){
     requestAnimationFrame(tick);
     t+=.004;scene.rotation.y=t*.11;
-    sy+=sd*.1;if(sy>11||sy<-11)sd*=-1;sw.position.y=sy;
     renderer.render(scene,camera);
   }
   tick();
