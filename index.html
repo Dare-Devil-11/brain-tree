@@ -302,7 +302,7 @@ setTimeout(()=>sel('root'),900);
 <script>
 (function(){
   // Embed current version timestamp — deploy script stamps this on every push
-  var VERSION = '20260615-104549';
+  var VERSION = '20260615-104651';
   var GITHUB_RAW = 'https://raw.githubusercontent.com/Dare-Devil-11/brain-tree/main/index.html';
   var GITHUB_EDIT = 'https://github.com/Dare-Devil-11/brain-tree/edit/main/index.html';
   var GITHUB_REPO = 'https://github.com/Dare-Devil-11/brain-tree';
@@ -353,7 +353,7 @@ setTimeout(()=>sel('root'),900);
 
   var vtag = document.createElement('div');
   vtag.id = 'version-tag';
-  vtag.textContent = 'v ' + (VERSION !== '20260615-104549' ? VERSION : 'local');
+  vtag.textContent = 'v ' + (VERSION !== '20260615-104651' ? VERSION : 'local');
   document.body.appendChild(vtag);
 
   // ── Version poll: every 60s fetch raw and compare VERSION string ──
@@ -366,7 +366,7 @@ setTimeout(()=>sel('root'),900);
         var remoteVer = m[1];
         var localVer  = VERSION;
         // If remote is newer and both are real timestamps
-        if(remoteVer !== '20260615-104549' && remoteVer !== localVer){
+        if(remoteVer !== '20260615-104651' && remoteVer !== localVer){
           bar.style.display = 'flex';
           bar.querySelector('.sb-ico').style.animation = 'none';
           bar.querySelector('.sb-ico').textContent = '↑';
