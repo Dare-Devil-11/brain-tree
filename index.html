@@ -258,15 +258,20 @@ setTimeout(()=>sel('root'),900);
   var scene=new THREE.Scene();
   var camera=new THREE.PerspectiveCamera(60,W/H,.1,200);
   camera.position.set(0,0,32);
-  // Fibonacci sphere neurons
-  var NC=240,phi=Math.PI*(3-Math.sqrt(5)),pos=[];
+  // Fibonacci sphere neurons — brighter, larger
+  var NC=320,phi=Math.PI*(3-Math.sqrt(5)),pos=[];
   for(var i=0;i<NC;i++){
     var y=1-(i/(NC-1))*2,r=Math.sqrt(1-y*y),th=phi*i;
     pos.push(new THREE.Vector3(Math.cos(th)*r*14,y*10,Math.sin(th)*r*14));
   }
   var ptGeo=new THREE.BufferGeometry().setFromPoints(pos);
-  var ptMat=new THREE.PointsMaterial({color:0x00e5ff,size:.16,transparent:true,opacity:.55});
+  var ptMat=new THREE.PointsMaterial({color:0xffffff,size:.38,transparent:true,opacity:.92});
   scene.add(new THREE.Points(ptGeo,ptMat));
+  // Second layer — large bright core nodes (white glow centers)
+  var corePos=pos.filter((_,i)=>i%5===0);
+  var coreGeo=new THREE.BufferGeometry().setFromPoints(corePos);
+  var coreMat=new THREE.PointsMaterial({color:0x00e5ff,size:.7,transparent:true,opacity:.75});
+  scene.add(new THREE.Points(coreGeo,coreMat));
   // Edges
   var lv=[];
   for(var i=0;i<NC;i++){
@@ -276,10 +281,18 @@ setTimeout(()=>sel('root'),900);
   }
   var lGeo=new THREE.BufferGeometry();
   lGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lv),3));
-  scene.add(new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.07})));
+  scene.add(new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.18})));
+  // Bright triangle mesh overlay — 2nd pass, shorter distance, higher opacity
+  var lv2=[];
+  for(var i=0;i<NC;i++){
+    for(var j=i+1;j<NC;j++){if(pos[i].distanceTo(pos[j])<3.2)lv2.push(pos[i].x,pos[i].y,pos[i].z,pos[j].x,pos[j].y,pos[j].z);}
+  }
+  var lGeo2=new THREE.BufferGeometry();
+  lGeo2.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lv2),3));
+  scene.add(new THREE.LineSegments(lGeo2,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.12})));
   // Scan sweep
-  var swGeo=new THREE.PlaneGeometry(36,.28);
-  var swMat=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.13,side:THREE.DoubleSide});
+  var swGeo=new THREE.PlaneGeometry(36,.4);
+  var swMat=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.22,side:THREE.DoubleSide});
   var sw=new THREE.Mesh(swGeo,swMat);scene.add(sw);
   var sy=-11,sd=1,t=0;
   function tick(){
