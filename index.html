@@ -9,10 +9,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 <style>
 :root{
-  --bg:#000912;--surface:rgba(10,12,22,.8);--surface2:rgba(18,20,35,.65);
-  --text:#f6f4f2;--muted:rgba(246,244,242,0.45);--border:rgba(246,244,242,0.08);
+  --bg:#000000;--surface:rgba(0,0,0,.88);--surface2:rgba(4,4,8,.72);
+  --text:#f6f4f2;--muted:rgba(246,244,242,0.45);--border:rgba(0,229,255,0.1);
   --accent:#ff4b4b;--green:#00ffaa;--cyan:#00e5ff;--blur:20px;
-  --radius:8px;--shadow:0 4px 24px rgba(0,0,0,.5);
+  --radius:8px;--shadow:0 4px 24px rgba(0,0,0,.8);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',monospace;overflow:hidden}
@@ -91,12 +91,19 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
 .s-primary{background:rgba(255,75,75,.12);color:var(--accent);border:1px solid rgba(255,75,75,.2)}
 .s-prototype{background:rgba(107,114,128,.2);color:#9ca3af;border:1px solid rgba(107,114,128,.2)}
 /* ── D3 graph ── */
-.node circle{cursor:pointer}
-.node text{pointer-events:none;font-family:'SF Mono',monospace;fill:var(--text)}
-.link{stroke:rgba(0,229,255,.07);stroke-width:1}
-.link.hl{stroke:var(--accent);stroke-width:1.5;opacity:.55}
-.node.dim circle{opacity:.1}.node.dim text{opacity:.07}
-.node.hl circle{stroke:#fff;stroke-width:2}
+.node circle{cursor:pointer;filter:drop-shadow(0 0 4px currentColor)}
+.nametag{pointer-events:none;paint-order:stroke}
+.link{stroke:rgba(0,229,255,.22);stroke-width:1}
+.link.hl{stroke:rgba(0,229,255,.85);stroke-width:2;filter:drop-shadow(0 0 4px #00e5ff)}
+.link.link-default{stroke:rgba(0,229,255,.22);stroke-width:1}
+.link.link-file-action{stroke:rgba(16,185,129,.7);stroke-width:1.4}
+.link.link-action-key{stroke:rgba(251,191,36,.75);stroke-width:1.5}
+.link.link-file-key{stroke:rgba(245,158,11,.5);stroke-width:1.1}
+.link.link-cross{stroke:rgba(0,229,255,.38);stroke-width:1.1}
+.ring-circle{fill:none;stroke:rgba(0,229,255,.07);stroke-width:1;stroke-dasharray:6,12}
+.ring-label{fill:rgba(0,229,255,.2);font-size:9px;font-family:'SF Mono',monospace;letter-spacing:.1em}
+.node.dim circle{opacity:.07;filter:none!important}.node.dim .nametag{opacity:.05}
+.node.hl circle{stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 12px #fff)!important}
 /* ── Tooltip ── */
 #tip{position:fixed;background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:8px;
   padding:7px 11px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;max-width:210px;line-height:1.6}
