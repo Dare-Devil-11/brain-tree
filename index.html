@@ -2,300 +2,577 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI-OS — Neural Brain Tree</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI-OS Neural Cortex — Karan Amin</title>
 <style>
-:root{
-  --bg:#000912;--surface:rgba(10,12,22,.8);--surface2:rgba(18,20,35,.65);
-  --text:#f6f4f2;--muted:rgba(246,244,242,0.45);--border:rgba(246,244,242,0.08);
-  --accent:#ff4b4b;--green:#00ffaa;--cyan:#00e5ff;--blur:20px;
-  --radius:8px;--shadow:0 4px 24px rgba(0,0,0,.5);
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000308;font-family:'SF Mono','Fira Code','Consolas',monospace}
+#c{position:fixed;inset:0;z-index:0}
+/* atmospheric overlays */
+#atm{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 60% at 50% 48%,transparent 38%,rgba(0,3,8,.72) 100%)}
+#scanlines{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,180,255,.012) 3px,rgba(0,180,255,.012) 4px)}
+/* corner brackets */
+.cb{position:fixed;width:22px;height:22px;z-index:12;pointer-events:none}
+.cb::before,.cb::after{content:'';position:absolute;background:#00e5ff;opacity:.6}
+.cb::before{width:100%;height:1.5px}
+.cb::after{width:1.5px;height:100%}
+.tl{top:12px;left:12px}.tl::before{top:0;left:0}.tl::after{top:0;left:0}
+.tr{top:12px;right:12px}.tr::before{top:0;right:0}.tr::after{top:0;right:0}
+.bl{bottom:12px;left:12px}.bl::before{bottom:0;left:0}.bl::after{bottom:0;left:0}
+.br{bottom:12px;right:12px}.br::before{bottom:0;right:0}.br::after{bottom:0;right:0}
+
+/* HUD */
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:flex;flex-direction:column}
+/* topbar */
+#top{pointer-events:auto;display:flex;align-items:center;height:52px;padding:0 22px;gap:18px;
+  background:rgba(0,4,12,.82);backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(0,229,255,.1)}
+.t-brand{display:flex;align-items:center;gap:10px}
+.t-dot{width:9px;height:9px;border-radius:50%;background:#00e5ff;
+  box-shadow:0 0 8px #00e5ff,0 0 18px rgba(0,229,255,.5);
+  animation:hblink 2s ease-in-out infinite}
+@keyframes hblink{0%,100%{opacity:1;box-shadow:0 0 8px #00e5ff,0 0 18px rgba(0,229,255,.5)}50%{opacity:.5;box-shadow:0 0 4px #00e5ff}}
+.t-title{font-size:13px;font-weight:700;letter-spacing:3px;color:#00e5ff;text-transform:uppercase}
+.t-sub{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1px;margin-top:1px}
+.t-spacer{flex:1}
+.t-stat{text-align:center;margin-left:20px}
+.t-val{font-size:18px;font-weight:900;color:#00e5ff;line-height:1;letter-spacing:-0.5px}
+.t-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-top:1px}
+
+/* body row */
+#body{flex:1;display:flex;overflow:hidden}
+
+/* left panel */
+#left{pointer-events:auto;width:210px;
+  background:rgba(0,4,12,.78);backdrop-filter:blur(18px);
+  border-right:1px solid rgba(0,229,255,.07);
+  overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:0}
+#left::-webkit-scrollbar{width:2px}
+#left::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2)}
+.lsec{padding:12px 14px 4px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,229,255,.4)}
+.litem{padding:7px 14px;font-size:11.5px;color:rgba(255,255,255,.5);cursor:pointer;
+  display:flex;align-items:center;gap:8px;border-left:2px solid transparent;
+  transition:all .15s}
+.litem:hover,.litem.on{background:rgba(0,229,255,.06);color:#fff;border-left-color:#00e5ff}
+.ldot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.c-agent{background:#ff4b4b;box-shadow:0 0 6px #ff4b4b}
+.c-task{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
+.c-project{background:#60a5fa;box-shadow:0 0 6px #60a5fa}
+.c-skill{background:#34d399;box-shadow:0 0 6px #34d399}
+.c-file{background:#a78bfa;box-shadow:0 0 6px #a78bfa}
+.c-script{background:#fb923c;box-shadow:0 0 6px #fb923c}
+.lstatus{margin-left:auto;width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.active-dot{background:#34d399;box-shadow:0 0 5px #34d399;animation:hblink 1.2s ease-in-out infinite}
+.idle-dot{background:rgba(255,255,255,.2)}
+
+/* center = canvas */
+#center{flex:1;position:relative;pointer-events:auto}
+
+/* right panel */
+#right{pointer-events:auto;width:252px;
+  background:rgba(0,4,12,.78);backdrop-filter:blur(18px);
+  border-left:1px solid rgba(0,229,255,.07);
+  overflow-y:auto;padding:16px 14px}
+#right::-webkit-scrollbar{width:2px}
+#right::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2)}
+.r-empty{font-size:11px;color:rgba(255,255,255,.25);text-align:center;margin-top:40px;line-height:1.8}
+.r-type{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,229,255,.55);margin-bottom:6px}
+.r-name{font-size:19px;font-weight:900;color:#fff;margin-bottom:10px;line-height:1.15}
+.r-desc{font-size:11.5px;color:rgba(255,255,255,.48);line-height:1.65;margin-bottom:14px}
+.r-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:5px}
+.r-k{font-size:10px;color:rgba(255,255,255,.3);min-width:60px;padding-top:1px}
+.r-v{font-size:10px;color:rgba(255,255,255,.7);flex:1;word-break:break-word}
+.r-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.r-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:rgba(0,229,255,.08);color:#00e5ff;border:1px solid rgba(0,229,255,.18)}
+.r-close{margin-top:16px;width:100%;padding:8px;border-radius:8px;border:1px solid rgba(0,229,255,.18);background:transparent;color:rgba(255,255,255,.35);font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
+.r-close:hover{background:rgba(0,229,255,.08);color:#00e5ff;border-color:#00e5ff}
+
+/* activity feed */
+#feed{pointer-events:auto;position:fixed;bottom:44px;right:266px;z-index:11;
+  width:240px;display:flex;flex-direction:column;gap:4px;overflow:hidden;max-height:120px}
+.feed-item{
+  font-size:10px;letter-spacing:.5px;padding:4px 8px;border-radius:4px;
+  background:rgba(0,4,12,.88);backdrop-filter:blur(10px);
+  border:1px solid rgba(0,229,255,.1);color:rgba(255,255,255,.6);
+  opacity:0;transform:translateY(6px);transition:all .3s;
+  display:flex;align-items:center;gap:6px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',monospace;overflow:hidden}
-/* ── Hologram layer ── */
-#hologram-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
-#scanlines{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;pointer-events:none;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
-#vignette{position:fixed;top:0;left:0;width:100%;height:100%;z-index:3;pointer-events:none;
-  background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.65) 100%)}
-.corner{position:fixed;width:18px;height:18px;z-index:5;pointer-events:none}
-.corner::before,.corner::after{content:'';position:absolute;background:var(--cyan);opacity:.5}
-.corner::before{width:100%;height:1px;top:0;left:0}
-.corner::after{width:1px;height:100%;top:0;left:0}
-.corner.tr::before{right:0;left:auto}.corner.tr::after{right:0;left:auto}
-.corner.bl::before{top:auto;bottom:0}.corner.bl::after{top:auto;bottom:0}
-.corner.br::before{top:auto;bottom:0;right:0;left:auto}.corner.br::after{top:auto;bottom:0;right:0;left:auto}
-.corner.tl{top:8px;left:8px}.corner.tr{top:8px;right:8px}
-.corner.bl{bottom:8px;left:8px}.corner.br{bottom:8px;right:8px}
-/* ── App shell ── */
-#app{position:relative;z-index:10;display:grid;grid-template-columns:268px 1fr 288px;grid-template-rows:50px 1fr;height:100vh}
-#topbar{grid-column:1/-1;background:var(--surface);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
-  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:0 18px}
-.logo{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:.08em;white-space:nowrap}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
-#search{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 11px;
-  color:var(--text);font-family:inherit;font-size:12px;outline:none}
-#search:focus{border-color:var(--accent)}
-#search::placeholder{color:var(--muted)}
-.pill{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:11px;color:var(--muted);white-space:nowrap}
-.pill span{color:var(--text)}
-#vtoggle{display:flex;gap:3px}
-.vbtn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:3px 9px;font-size:11px;font-family:inherit;border-radius:4px;cursor:pointer;transition:all .15s}
-.vbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-/* ── Sidebar ── */
-#sidebar{background:var(--surface);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
-  border-right:1px solid var(--border);overflow-y:auto;padding:10px 0}
-#sidebar::-webkit-scrollbar{width:3px}
-#sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.ts{margin-bottom:3px}
-.th{display:flex;align-items:center;gap:7px;padding:5px 14px;cursor:pointer;font-size:11px;font-weight:700;
-  letter-spacing:.06em;color:var(--muted);text-transform:uppercase;user-select:none;transition:color .15s}
-.th:hover{color:var(--text)}
-.th .d{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.th .arr{margin-left:auto;transition:transform .2s;font-size:10px}
-.th.open .arr{transform:rotate(90deg)}
-.tc{display:none}.tc.open{display:block}
-.ti{padding:4px 14px 4px 32px;font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;transition:color .15s,background .15s}
-.ti:hover,.ti.active{color:var(--text);background:rgba(255,75,75,.06)}
-.ti .badge{margin-left:auto;font-size:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1px 5px;color:var(--muted)}
-/* ── Main (transparent — hologram shows through) ── */
-#main{position:relative;overflow:hidden;background:transparent}
-#gc{width:100%;height:100%}
-#tv{width:100%;height:100%;display:none;overflow:auto;padding:14px 0}
-#detail{background:var(--surface);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));
-  border-left:1px solid var(--border);overflow-y:auto;padding:15px}
-#detail::-webkit-scrollbar{width:3px}
-#detail::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.de{color:var(--muted);font-size:12px;text-align:center;margin-top:40px;line-height:1.8}
-.dt{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.dn{font-size:15px;font-weight:700;color:var(--text);margin-bottom:11px;line-height:1.3}
-.dd{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px}
-.dr{display:flex;gap:7px;margin-bottom:7px;align-items:flex-start}
-.dk{font-size:11px;color:var(--muted);min-width:76px;padding-top:1px}
-.dv{font-size:11px;color:var(--text);word-break:break-all;flex:1}
-.dtag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:10px;color:var(--muted);margin:2px}
-.dsec{margin-top:14px;border-top:1px solid var(--border);padding-top:11px}
-.dst{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-.br{display:flex;align-items:center;gap:7px;margin-bottom:5px}
-.bl{font-size:10px;color:var(--muted);min-width:76px}
-.bt{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
-.bf{height:100%;border-radius:2px}
-.bc{font-size:10px;color:var(--muted);min-width:22px;text-align:right}
-.sb{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:11px}
-.s-active{background:rgba(0,255,170,.12);color:var(--green);border:1px solid rgba(0,255,170,.2)}
-.s-installed-unwired{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.2)}
-.s-primary{background:rgba(255,75,75,.12);color:var(--accent);border:1px solid rgba(255,75,75,.2)}
-.s-prototype{background:rgba(107,114,128,.2);color:#9ca3af;border:1px solid rgba(107,114,128,.2)}
-/* ── D3 graph ── */
-.node circle{cursor:pointer}
-.node text{pointer-events:none;font-family:'SF Mono',monospace;fill:var(--text)}
-.link{stroke:rgba(0,229,255,.07);stroke-width:1}
-.link.hl{stroke:var(--accent);stroke-width:1.5;opacity:.55}
-.node.dim circle{opacity:.1}.node.dim text{opacity:.07}
-.node.hl circle{stroke:#fff;stroke-width:2}
-/* ── Tooltip ── */
-#tip{position:fixed;background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:8px;
-  padding:7px 11px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;max-width:210px;line-height:1.6}
-.tt{color:var(--text);font-weight:700;margin-bottom:2px}
-.ty{color:var(--muted);font-size:10px}
-/* ── Minimap ── */
-#mm{position:absolute;bottom:14px;right:14px;background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;padding:7px;font-size:10px;color:var(--muted);line-height:1.8}
-.mr{display:flex;align-items:center;gap:5px}
-.md{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-/* ── RNG button + challenge ── */
-#rng-btn{background:linear-gradient(135deg,#ff4b4b,#7c3aed);border:none;border-radius:6px;padding:4px 11px;
-  color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.04em;white-space:nowrap;transition:opacity .2s}
-#rng-btn:hover{opacity:.82}
-#challenge-box{position:fixed;bottom:76px;right:14px;background:var(--surface);backdrop-filter:blur(var(--blur));
-  border:1px solid var(--border);border-radius:10px;padding:13px 15px;font-size:11px;max-width:250px;display:none;z-index:200;line-height:1.7}
-.cb-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.cb-tool{font-size:13px;font-weight:700;margin-bottom:5px}
-.cb-task{color:var(--muted)}
-/* ── Animations ── */
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes tool-glow{0%,100%{filter:drop-shadow(0 0 4px currentColor);opacity:1}50%{filter:drop-shadow(0 0 11px currentColor);opacity:.82}}
-.tool-node circle{animation:tool-glow 2.8s ease-in-out infinite}
-.node.rng-pick circle{animation:tool-glow .7s ease-in-out infinite!important;stroke:#fff!important;stroke-width:3!important}
+.feed-item.show{opacity:1;transform:translateY(0)}
+.feed-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* bottom bar */
+#bot{pointer-events:none;height:36px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;background:rgba(0,4,12,.72);backdrop-filter:blur(12px);
+  border-top:1px solid rgba(0,229,255,.07);
+  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22)}
+.bot-live{display:flex;align-items:center;gap:6px}
+.bot-dot{width:5px;height:5px;border-radius:50%;background:#34d399;
+  box-shadow:0 0 6px #34d399;animation:hblink 1.4s ease-in-out infinite}
+
+/* node label floaters */
+.node-label{position:absolute;pointer-events:none;font-size:9px;letter-spacing:.5px;
+  color:rgba(0,229,255,.7);text-transform:uppercase;white-space:nowrap;z-index:11;
+  background:rgba(0,4,12,.6);padding:1px 4px;border-radius:2px;
+  opacity:0;transition:opacity .2s}
+
+/* legend */
+#legend{position:fixed;left:222px;bottom:44px;z-index:11;pointer-events:none;
+  display:flex;gap:10px;flex-direction:column}
+.leg{display:flex;align-items:center;gap:5px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.leg-dot{width:7px;height:7px;border-radius:50%}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+#top{animation:fadeUp .4s .05s both}
+#left{animation:fadeUp .4s .1s both}
+#right{animation:fadeUp .4s .15s both}
+#bot{animation:fadeUp .4s .2s both}
 </style>
 </head>
 <body>
-<canvas id="hologram-canvas"></canvas>
+<canvas id="c"></canvas>
+<div id="atm"></div>
 <div id="scanlines"></div>
-<div id="vignette"></div>
-<div class="corner tl"></div>
-<div class="corner tr"></div>
-<div class="corner bl"></div>
-<div class="corner br"></div>
-<div id="app">
-  <div id="topbar">
-    <div class="logo">&#9654; NEURAL MAP</div>
-    <div class="pulse"></div>
-    <input id="search" type="text" placeholder="Search nodes..." />
-    <div class="pill">Nodes <span id="sn">—</span></div>
-    <div class="pill">Projects <span>16</span></div>
-    <div class="pill">Skills <span>579</span></div>
-    <div class="pill">Prompts <span>1</span></div>
-    <div class="pill">Graph nodes <span>19,961</span></div>
-    <button id="rng-btn" onclick="randomTool()">&#127922; Random Tool</button>
-    <div id="vtoggle">
-      <button class="vbtn active" id="bf" onclick="setV('f')">Force</button>
-      <button class="vbtn" id="bt2" onclick="setV('t')">Tree</button>
+<div class="cb tl"></div><div class="cb tr"></div><div class="cb bl"></div><div class="cb br"></div>
+
+<div id="hud">
+  <div id="top">
+    <div class="t-brand">
+      <div class="t-dot"></div>
+      <div><div class="t-title">Neural Cortex</div><div class="t-sub">AI-OS · Karan Amin</div></div>
+    </div>
+    <div class="t-spacer"></div>
+    <div class="t-stat"><div class="t-val" id="sv-agents">0</div><div class="t-lbl">Agents</div></div>
+    <div class="t-stat"><div class="t-val" id="sv-tasks">0</div><div class="t-lbl">Tasks</div></div>
+    <div class="t-stat"><div class="t-val" id="sv-signals">0</div><div class="t-lbl">Signals</div></div>
+    <div class="t-stat"><div class="t-val" id="sv-files">0</div><div class="t-lbl">Files</div></div>
+  </div>
+  <div id="body">
+    <div id="left">
+      <div class="lsec">Agents</div>
+      <div class="litem on" data-key="claude"><span class="ldot c-agent"></span>Claude Code<span class="lstatus active-dot"></span></div>
+      <div class="litem" data-key="gemini"><span class="ldot c-agent"></span>Gemini CLI<span class="lstatus active-dot"></span></div>
+      <div class="litem" data-key="ollama"><span class="ldot c-agent"></span>Ollama<span class="lstatus idle-dot"></span></div>
+      <div class="litem" data-key="graphify"><span class="ldot c-agent"></span>Graphify<span class="lstatus idle-dot"></span></div>
+      <div class="lsec">Task Bots</div>
+      <div class="litem" data-key="content-bot"><span class="ldot c-task"></span>Content Bot<span class="lstatus active-dot"></span></div>
+      <div class="litem" data-key="deploy-bot"><span class="ldot c-task"></span>Deploy Bot<span class="lstatus active-dot"></span></div>
+      <div class="litem" data-key="medicaid-bot"><span class="ldot c-task"></span>Medicaid Agent<span class="lstatus idle-dot"></span></div>
+      <div class="litem" data-key="watchdog"><span class="ldot c-task"></span>Tab Watchdog<span class="lstatus active-dot"></span></div>
+      <div class="lsec">Projects</div>
+      <div class="litem" data-key="umas"><span class="ldot c-project"></span>UMAS</div>
+      <div class="litem" data-key="goat-life"><span class="ldot c-project"></span>GOAT Life</div>
+      <div class="litem" data-key="mafs"><span class="ldot c-project"></span>MAFS</div>
+      <div class="litem" data-key="santoshland"><span class="ldot c-project"></span>Santoshland</div>
+      <div class="litem" data-key="machina"><span class="ldot c-project"></span>Machina XRAY</div>
+      <div class="lsec">Live Files</div>
+      <div class="litem" data-key="brain-html"><span class="ldot c-file"></span>brain-tree.html<span class="lstatus active-dot"></span></div>
+      <div class="litem" data-key="brain-json"><span class="ldot c-file"></span>brain-tree.json<span class="lstatus idle-dot"></span></div>
+      <div class="litem" data-key="build-py"><span class="ldot c-script"></span>build-brain-tree.py</div>
+      <div class="litem" data-key="session-log"><span class="ldot c-file"></span>session-log.md<span class="lstatus active-dot"></span></div>
+    </div>
+    <div id="center"></div>
+    <div id="right">
+      <div class="r-empty">Click any node<br>or sidebar item<br>to inspect</div>
     </div>
   </div>
-  <div id="sidebar"><div id="nav"></div></div>
-  <div id="main">
-    <svg id="gc"></svg>
-    <div id="tv"></div>
-    <div id="mm">
-      <div class="mr"><div class="md" style="background:#ff4b4b"></div><span>Karan Amin</span></div>
-      <div class="mr"><div class="md" style="background:#60a5fa"></div><span>Projects</span></div>
-      <div class="mr"><div class="md" style="background:#f59e0b"></div><span>Tools</span></div>
-      <div class="mr"><div class="md" style="background:#e879f9"></div><span>Skills (662)</span></div>
-      <div class="mr"><div class="md" style="background:#00ffaa"></div><span>Behavior Patterns</span></div>
-      <div class="mr"><div class="md" style="background:#38bdf8"></div><span>Infrastructure</span></div>
-      <div class="mr"><div class="md" style="background:#fb923c"></div><span>Learned</span></div>
-      <div class="mr"><div class="md" style="background:#8b5cf6"></div><span>Claude HowTo v2.1.160</span></div>
-    </div>
+  <div id="bot">
+    <div class="bot-live"><div class="bot-dot"></div>LIVE — AUTO-DEPLOY 60S</div>
+    <div>DRAG ORBIT &nbsp;·&nbsp; SCROLL ZOOM</div>
+    <div id="bot-time">——</div>
   </div>
-  <div id="detail"><p class="de">Click any node<br>to see details</p></div>
 </div>
-<div id="tip"><div class="tt" id="tt"></div><div class="ty" id="ty"></div></div>
-<div id="challenge-box"><div class="cb-label">Today's Tool Challenge</div><div class="cb-tool"></div><div class="cb-task"></div></div>
+
+<div id="feed"></div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#ff4b4b;box-shadow:0 0 5px #ff4b4b"></div>Agent Signal</div>
+  <div class="leg"><div class="leg-dot" style="background:#f59e0b;box-shadow:0 0 5px #f59e0b"></div>Task Signal</div>
+  <div class="leg"><div class="leg-dot" style="background:#a78bfa;box-shadow:0 0 5px #a78bfa"></div>File Write</div>
+  <div class="leg"><div class="leg-dot" style="background:#34d399;box-shadow:0 0 5px #34d399"></div>Cascade</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-
-const D={"id":"root","label":"Karan Amin","type":"identity","color":"#ff4b4b","meta":{"email_primary":"karanamin@umasinc.com","email_personal":"karanamin1995@gmail.com","github":"karanamin1995","platform":"Mac / Claude Code CLI","last_updated":"2026-06-15","total_keystroke_entries":1,"total_graph_nodes":19961,"total_graph_edges":3199,"active_projects":16,"skills_installed":579,"howto_sections":10,"howto_files":"100+","howto_version":"2.1.160"},"children":[{"id":"projects","label":"Projects","type":"cluster","color":"#60a5fa","children":[{"id":"ai-os","label":"AI-OS","type":"project","status":"active","path":"~/AI-OS","graph_nodes":80,"stack":["Shell","Docs","Web"],"description":"Personal AI operating system. Hub for all projects, memory, and automation.","color":"#a78bfa","children":[{"id":"ai-os-app","label":"app/","type":"component","description":"Core AI application layer","children":[{"id":"app-agents","label":"agents/","type":"module","files":["adaptive_router.md","query_decomposer.md","document_grader.md"]},{"id":"app-security","label":"security/","type":"module","files":["content_filter.md","input_guard.md","output_filter.md"]},{"id":"app-services","label":"services/","type":"module","files":["rag_pipeline.md","semantic_cache.md","query_rewriter.md","query_router.md"]},{"id":"app-components","label":"components/","type":"module","files":["hybrid_retriever.md","reranker.md"]},{"id":"app-prompts","label":"prompts/","type":"module","files":["templates.md","registry.md"]}]},{"id":"ai-os-outputs","label":"outputs/","type":"component","description":"All deliverables: SEO, forms, dashboards, HTML pages"},{"id":"ai-os-logs","label":"logs/","type":"component","description":"keystroke-log.md, session-log.md, error-log.md \u2014 live telemetry"},{"id":"ai-os-memory","label":"memory/","type":"component","description":"Persistent cross-session memory. MEMORY.md index + typed .md files"},{"id":"ai-os-prompts","label":"prompts/","type":"component","description":"MASTER_PROMPTS.md, MODEL_PROMPT_PACK.md \u2014 1,182 extracted prompts"},{"id":"ai-os-scripts","label":"scripts/","type":"component","description":"56 scripts: startup-brain.sh, humanize-batch.py, session-logger.py, build-brain-tree.py + more"}]},{"id":"umas","label":"UMAS","type":"project","status":"active","path":"GoHighLevel CMS","description":"Elder care nonprofit \u2014 Chicagoland IL. CMS: GoHighLevel.","color":"#34d399","graph_nodes":0,"meta":{"phone":"847-306-7606","ghl_location_id":"5opdoL1faiu1kTiGZ1Vx"},"children":[{"id":"umas-seo","label":"SEO Strategy","type":"module","files":["llms.txt","keyword-tracker.md","internal-links.md","ghl-deploy-guide.md"]},{"id":"umas-pages","label":"Service Pages (5)","type":"module","description":"5 HTML service pages ready for GHL deployment"},{"id":"umas-blog","label":"Blog Posts (10)","type":"module"},{"id":"umas-email","label":"Email Sequence (6)","type":"module","description":"6-email nurture sequence"},{"id":"umas-schema","label":"Schema Markup","type":"module","description":"Organization JSON-LD, location pages x3"},{"id":"umas-hologram","label":"Hologram Site","type":"module","description":"LIVE at dare-devil-11.github.io/umas-hologram/"}]},{"id":"my-project","label":"my-project","type":"project","status":"active","path":"~/my-project","graph_nodes":17009,"stack":["TypeScript","Docs","Config","React"],"description":"Largest codebase: 17,009 nodes. TypeScript + React heavy.","color":"#f59e0b"},{"id":"claude-skills-proj","label":"claude-skills","type":"project","status":"active","path":"~/.claude/skills/","graph_nodes":2217,"stack":["Docs","Python","Config"],"description":"662 installed skills. Largest skill repo in the ecosystem.","color":"#e879f9"},{"id":"marketingskills","label":"marketingskills","type":"project","status":"active","path":"~/marketingskills","graph_nodes":312,"stack":["Docs","JavaScript","Config"],"color":"#fb923c"},{"id":"ai-video-agent","label":"ai-video-agent","type":"project","status":"active","path":"~/ai-video-agent","graph_nodes":138,"stack":["Python","Docs","Config"],"description":"Riverside + Graphify pipeline for video content.","color":"#f472b6"},{"id":"machina-extension","label":"machina-extension","type":"project","status":"active","path":"~/machina-extension","graph_nodes":6,"stack":["Web","JavaScript"],"description":"Chrome extension v1.2 \u2014 DOM search + DevTools panel.","color":"#38bdf8"},{"id":"mcp-excalidraw","label":"mcp_excalidraw","type":"project","status":"active","path":"~/mcp_excalidraw","graph_nodes":21,"stack":["TypeScript","Config"],"description":"TypeScript MCP server \u2014 draws Excalidraw diagrams via Claude.","color":"#4ade80"},{"id":"goat-life","label":"GOAT-LIFE","type":"project","status":"active","path":"~/GOAT-LIFE / golfonanytee.com","graph_nodes":5,"description":"Pixar-style golf comedy animated series. Firefly\u2192Nano Banana\u2192Kling\u2192ElevenLabs pipeline.","color":"#a3e635"},{"id":"my-site","label":"my-site (GammaPulse)","type":"project","status":"active","path":"~/my-site","graph_nodes":9,"stack":["Docs","Web"],"description":"Personal site. sync-context.sh LIVE \u2014 Google Apps Script bidirectional Claude\u2194Sheets sync.","color":"#22d3ee"},{"id":"paul","label":"paul","type":"project","status":"active","path":"~/paul","graph_nodes":97,"stack":["Docs","Config"],"color":"#94a3b8"},{"id":"content-bot","label":"content-bot","type":"project","status":"active","path":"~/content-bot","graph_nodes":5,"stack":["Python"],"description":"GHL social media posting. Location: 5opdoL1faiu1kTiGZ1Vx. Ollama generation local.","color":"#fb7185"},{"id":"medicaid-agent","label":"medicaid-agent","type":"project","status":"active","path":"~/medicaid-agent","graph_nodes":11,"stack":["Python","Config","Shell"],"description":"Illinois Medicaid senior targeting. Google Sheets/Docs integration.","color":"#fbbf24"},{"id":"ai-agent","label":"ai-agent","type":"project","status":"active","path":"~/ai-agent/ai.sh","graph_nodes":1,"description":"CLI routing: simple\u2192qwen2.5-coder:3b, complex\u2192Claude+llama3.2 fallback.","color":"#67e8f9"},{"id":"arcads","label":"arcads-claude-code","type":"project","status":"active","path":"~/arcads-claude-code","graph_nodes":40,"stack":["Docs","Shell"],"color":"#c084fc"},{"id":"acme-prototype","label":"acme-prototype","type":"project","status":"prototype","graph_nodes":1,"color":"#6b7280"},{"id":"playwright-mcp","label":"playwright-mcp","type":"project","status":"active","path":"~/playwright-mcp","description":"Auto-discovered. Stack: TypeScript, JavaScript, Docs","color":"#94a3b8","stack":["TypeScript","JavaScript","Docs"],"graph_nodes":30},{"id":"stop-slop","label":"stop-slop","type":"project","status":"active","path":"~/stop-slop","description":"Auto-discovered. Stack: Docs","color":"#94a3b8","stack":["Docs"],"graph_nodes":7},{"id":"everything-claude-code","label":"everything-claude-code","type":"project","status":"active","path":"~/everything-claude-code","description":"Auto-discovered. Stack: Python, TypeScript, React, JavaScript","color":"#94a3b8","stack":["Python","TypeScript","React","JavaScript"],"graph_nodes":3118},{"id":"awesome-claude-code","label":"awesome-claude-code","type":"project","status":"active","path":"~/awesome-claude-code","description":"Auto-discovered. Stack: Python, Docs, Web","color":"#94a3b8","stack":["Python","Docs","Web"],"graph_nodes":738},{"id":"agents","label":"agents","type":"project","status":"active","path":"~/agents","description":"Auto-discovered. Stack: Python, Shell, Docs","color":"#94a3b8","stack":["Python","Shell","Docs"],"graph_nodes":1029},{"id":"motion","label":"motion","type":"project","status":"active","path":"~/motion","description":"Auto-discovered. Stack: TypeScript, React, JavaScript, Docs","color":"#94a3b8","stack":["TypeScript","React","JavaScript","Docs"],"graph_nodes":5639},{"id":"arcads-claude-code","label":"arcads-claude-code","type":"project","status":"active","path":"~/arcads-claude-code","description":"Auto-discovered. Stack: Shell, Docs","color":"#94a3b8","stack":["Shell","Docs"],"graph_nodes":191},{"id":"bridgemix-editor","label":"bridgemix-editor","type":"project","status":"active","path":"~/bridgemix-editor","description":"Auto-discovered. Stack: TypeScript, React, JavaScript, Docs","color":"#94a3b8","stack":["TypeScript","React","JavaScript","Docs"],"graph_nodes":861},{"id":"codesum","label":"codesum","type":"project","status":"active","path":"~/codesum","description":"Auto-discovered. Stack: Python, Shell, Docs","color":"#94a3b8","stack":["Python","Shell","Docs"],"graph_nodes":51},{"id":"gemini-cli","label":"gemini-cli","type":"project","status":"active","path":"~/gemini-cli","description":"Auto-discovered. Stack: TypeScript, React, JavaScript, Shell","color":"#94a3b8","stack":["TypeScript","React","JavaScript","Shell"],"graph_nodes":9422},{"id":"claude-subconscious","label":"claude-subconscious","type":"project","status":"active","path":"~/claude-subconscious","description":"Auto-discovered. Stack: TypeScript, Docs","color":"#94a3b8","stack":["TypeScript","Docs"],"graph_nodes":27},{"id":"claude-skills","label":"claude-skills","type":"project","status":"active","path":"~/claude-skills","description":"Auto-discovered. Stack: Python, TypeScript, React, JavaScript","color":"#94a3b8","stack":["Python","TypeScript","React","JavaScript"],"graph_nodes":3503},{"id":"repomix","label":"repomix","type":"project","status":"active","path":"~/repomix","description":"Auto-discovered. Stack: TypeScript, JavaScript, Shell, Docs","color":"#94a3b8","stack":["TypeScript","JavaScript","Shell","Docs"],"graph_nodes":976},{"id":"claude-squad","label":"claude-squad","type":"project","status":"active","path":"~/claude-squad","description":"Auto-discovered. Stack: TypeScript, React, Shell, Docs","color":"#94a3b8","stack":["TypeScript","React","Shell","Docs"],"graph_nodes":78},{"id":"nano-banana-mcp","label":"Nano-Banana-MCP","type":"project","status":"active","path":"~/Nano-Banana-MCP","description":"Auto-discovered. Stack: TypeScript, Docs","color":"#94a3b8","stack":["TypeScript","Docs"],"graph_nodes":13},{"id":"frontend-slides","label":"frontend-slides","type":"project","status":"active","path":"~/frontend-slides","description":"Auto-discovered. Stack: Python, JavaScript, Shell, Docs","color":"#94a3b8","stack":["Python","JavaScript","Shell","Docs"],"graph_nodes":162},{"id":"ultraplan","label":"ultraplan","type":"project","status":"active","path":"~/ultraplan","description":"Auto-discovered. Stack: Python, Shell, Docs, Web","color":"#94a3b8","stack":["Python","Shell","Docs","Web"],"graph_nodes":6908},{"id":"humanizer","label":"humanizer","type":"project","status":"active","path":"~/humanizer","description":"Auto-discovered. Stack: Docs","color":"#94a3b8","stack":["Docs"],"graph_nodes":4},{"id":"caveman","label":"caveman","type":"project","status":"active","path":"~/caveman","description":"Auto-discovered. Stack: Python, JavaScript, Shell, Docs","color":"#94a3b8","stack":["Python","JavaScript","Shell","Docs"],"graph_nodes":138},{"id":"superpowers","label":"superpowers","type":"project","status":"active","path":"~/superpowers","description":"Auto-discovered. Stack: Python, TypeScript, JavaScript, Shell","color":"#94a3b8","stack":["Python","TypeScript","JavaScript","Shell"],"graph_nodes":139},{"id":"tdd-guard","label":"tdd-guard","type":"project","status":"active","path":"~/tdd-guard","description":"Auto-discovered. Stack: Python, TypeScript, JavaScript, Shell","color":"#94a3b8","stack":["Python","TypeScript","JavaScript","Shell"],"graph_nodes":392},{"id":"andrej-karpathy-skills","label":"andrej-karpathy-skills","type":"project","status":"active","path":"~/andrej-karpathy-skills","description":"Auto-discovered. Stack: Docs","color":"#94a3b8","stack":["Docs"],"graph_nodes":9},{"id":"claude-code-skill-factory","label":"claude-code-skill-factory","type":"project","status":"active","path":"~/claude-code-skill-factory","description":"Auto-discovered. Stack: Python, Shell, Docs","color":"#94a3b8","stack":["Python","Shell","Docs"],"graph_nodes":363},{"id":"remotion","label":"remotion","type":"project","status":"active","path":"~/remotion","description":"Auto-discovered. Stack: Python, TypeScript, React, JavaScript","color":"#94a3b8","stack":["Python","TypeScript","React","JavaScript"],"graph_nodes":11483},{"id":"awesome-claude-toolkit","label":"awesome-claude-toolkit","type":"project","status":"active","path":"~/awesome-claude-toolkit","description":"Auto-discovered. Stack: Python, JavaScript, Shell, Docs","color":"#94a3b8","stack":["Python","JavaScript","Shell","Docs"],"graph_nodes":634},{"id":"get-shit-done","label":"get-shit-done","type":"project","status":"active","path":"~/get-shit-done","description":"Auto-discovered. Stack: TypeScript, JavaScript, Shell, Docs","color":"#94a3b8","stack":["TypeScript","JavaScript","Shell","Docs"],"graph_nodes":1818},{"id":"design-md-chrome","label":"design-md-chrome","type":"project","status":"active","path":"~/design-md-chrome","description":"Auto-discovered. Stack: JavaScript, Shell, Docs, Web","color":"#94a3b8","stack":["JavaScript","Shell","Docs","Web"],"graph_nodes":24}]},{"id":"tools","label":"Tools","type":"cluster","color":"#f59e0b","children":[{"id":"tool-claude","label":"Claude Code","type":"tool","status":"primary","description":"Primary orchestrator. Runs all sessions. claude-sonnet-4-6.","color":"#ff4b4b","children":[{"id":"tool-claude-skills","label":"662 Skills","type":"subtool"},{"id":"tool-claude-memory","label":"Auto Memory","type":"subtool"},{"id":"tool-claude-hooks","label":"Session Logger Hook","type":"subtool"},{"id":"tool-claude-rules","label":"Rules (no-ask, git, web-design, api)","type":"subtool"},{"id":"tool-claude-mem","label":"claude-mem","type":"tool","status":"active","description":"@thedotmack plugin. Persistent memory across Claude Code sessions. Installed and enabled.","version":"1.x"},{"id":"tool-agent-view","label":"Agent View","type":"tool","status":"active","description":"claude agents \u2014 multi-session manager (v2.1.139+). View and manage parallel agent sessions.","version":"2.1.139"}]},{"id":"tool-playwright","label":"playwright-mcp","type":"tool","status":"installed-unwired","path":"~/playwright-mcp","version":"0.0.75","description":"Browser automation MCP \u2014 click, screenshot, scrape via Claude. INSTALLED but not wired to MCP config.","color":"#f59e0b"},{"id":"tool-graphify","label":"graphify","type":"tool","status":"active","description":"Knowledge graph generator. 19,961 nodes mapped. output: file-relationship-graph.json","color":"#34d399"},{"id":"tool-ollama","label":"Ollama (local LLMs)","type":"tool","status":"active","description":"llama3.2 for summarization/drafting. qwen2.5-coder:3b for code routing.","color":"#60a5fa"},{"id":"tool-ghl","label":"GoHighLevel","type":"tool","status":"active","description":"CMS + CRM for UMAS. content-bot publishes here. Location: 5opdoL1faiu1kTiGZ1Vx.","color":"#a78bfa"},{"id":"tool-n8n","label":"n8n","type":"tool","status":"active","description":"Automation workflows. log: ~/AI-OS/logs/n8n.log","color":"#fb7185"},{"id":"tool-gemini","label":"Gemini CLI","type":"tool","status":"active","path":"~/gemini-cli","description":"Second AI opinion. Google Search grounding. 1M token context. Free: 60 req/min.","color":"#4ade80"},{"id":"tool-obsidian","label":"Obsidian","type":"tool","status":"active","description":"Knowledge vault. Session journals at ~/AI-OS/obsidian-vault/05-Journal/","color":"#c084fc"}]},{"id":"skills","label":"Skills (662)","type":"cluster","color":"#e879f9","children":[{"id":"skills-seo","label":"SEO & Content","type":"skill-group","skills":["ai-seo","seo-audit","content-strategy","content-engine","content-humanizer"]},{"id":"skills-writing","label":"Writing","type":"skill-group","skills":["copywriting","email-sequence","voicebox-pro","content-humanizer"]},{"id":"skills-design","label":"Design & Frontend","type":"skill-group","skills":["ui-ux-pro","theme-factory","framer-motion"]},{"id":"skills-video","label":"YouTube & Video","type":"skill-group","skills":["video-content-strategist","ads-youtube","voicebox-pro"]},{"id":"skills-analytics","label":"Analytics & Planning","type":"skill-group","skills":["analytics-dashboard","planning-pro"]},{"id":"skills-gsd","label":"GSD Agents (33)","type":"skill-group","path":"~/get-shit-done/agents"},{"id":"skills-awesome","label":"Awesome Claude Toolkit (36)","type":"skill-group","path":"~/awesome-claude-toolkit"},{"id":"skills-everything","label":"Everything Claude Code (33)","type":"skill-group","path":"~/everything-claude-code"}]},{"id":"behavior","label":"Behavior Patterns","type":"cluster","color":"#00ffaa","children":[{"id":"beh-topics","label":"Top Work Topics","type":"behavior","data":{"Claude":55,"Code":52,"Design":51,"Content":46,"Web Build":43,"UMAS":21,"SEO":21,"Bot/Loop":19,"AI Tools":19,"Debug":17,"Automation":14,"Image":13,"Animation":11}},{"id":"beh-sessions","label":"Session Style","type":"behavior","description":"Parallel batch sessions. Humanizer ran 20+ parallel instances simultaneously today. Voice-to-text prompts common. Image batches sent frequently."},{"id":"beh-log","label":"Keystroke Log","type":"behavior","description":"107,742 IDs logged since May 21. 404 unique prompt entries. Auto-appends every session via hook."},{"id":"beh-morning","label":"Morning Pattern","type":"behavior","description":"Batch humanizer + SEO + image analysis"},{"id":"beh-afternoon","label":"Afternoon Pattern","type":"behavior","description":"Web builds, debugging, video/animation work"}]},{"id":"infrastructure","label":"Infrastructure","type":"cluster","color":"#38bdf8","children":[{"id":"infra-startup","label":"Startup Script","type":"infra","path":"~/AI-System/scripts/start_ai.sh"},{"id":"infra-shutdown","label":"Shutdown/Autosave","type":"infra","path":"~/AI-OS/scripts/aios-exit.sh"},{"id":"infra-gdrive","label":"Google Drive Backup","type":"infra","description":"5TB storage. karanamin1995@gmail.com"},{"id":"infra-github","label":"GitHub Pages","type":"infra","description":"dare-devil-11.github.io \u2014 UMAS hologram, task checklist live"},{"id":"infra-obsidian","label":"Session Timeline","type":"infra","path":"~/AI-OS/outputs/session-timeline.html"},{"id":"infra-watchdog","label":"Tab Watchdog","type":"infra","description":"Cron every 15 min. Whitelist: ~/AI-OS/state/tab-whitelist.txt"}]},{"id":"learned","label":"Learned","type":"cluster","color":"#fb923c","children":[{"id":"braintree-ltd","label":"Braintree Ltd","type":"research","status":"active","path":"https://www.braintree.com","color":"#5EC5FF","description":"UK Symbolic AI (GOFAI) company. Research since 2002. Not PayPal Braintree.","children":[{"id":"bt-synapsdb","label":"SynapsDB","type":"product","status":"active","color":"#5EC5FF","description":"Dynamic Database. 10,000x speed. Live on market."},{"id":"bt-idcp","label":"IDCP","type":"product","status":"active","color":"#5EC5FF","description":"Intelligent Data Convergence Platform. Multi-source Big Data."},{"id":"bt-navirara","label":"NaviRara","type":"product","status":"installed-unwired","color":"#5EC5FF","description":"Context search engine. Dialogue-based. POC ready."},{"id":"bt-egg","label":"EGG","type":"product","status":"installed-unwired","color":"#5EC5FF","description":"Self-Learning Processor on FPGA + SynapsDB. POC ready."},{"id":"bt-sunny","label":"Sunny","type":"product","status":"installed-unwired","color":"#5EC5FF","description":"Symbolic Digital Consciousness. First autonomous virtual mind. POC ready."}]},{"id":"ai-landscape","label":"AI Landscape","type":"cluster","color":"#00FFD1","description":"AI models + tools in active use or being tracked.","children":[{"id":"ail-claude-code","label":"Claude Code","type":"tool","status":"primary","color":"#ff4b4b","description":"CLI. claude-sonnet-4-6. Primary session orchestrator."},{"id":"ail-opus-4-8","label":"Opus 4.8","type":"model","status":"active","color":"#ff4b4b","description":"Latest Opus. Fast mode. Model: claude-opus-4-8."},{"id":"ail-gemini","label":"Gemini 2.5","type":"model","status":"active","color":"#4ade80","description":"Google. 1M token context. Free 60 req/min. ~/gemini-cli"},{"id":"ail-gemma4","label":"Gemma 4","type":"model","status":"active","color":"#4ade80","description":"Google open model via Ollama locally."},{"id":"ail-ollama","label":"Ollama","type":"tool","status":"active","color":"#60a5fa","description":"Local LLM runner. llama3.2 + qwen2.5-coder:3b + gemma4."},{"id":"ail-codex","label":"Codex","type":"model","status":"active","color":"#38bdf8","description":"OpenAI code model. Available via API."},{"id":"ail-fabled5","label":"Fable 5","type":"model","status":"active","color":"#ff4b4b","description":"Upcoming Claude release. Benchmarked vs GPT-5.5 + Gemini."},{"id":"ail-cowork","label":"Claude Cowork","type":"tool","status":"active","color":"#ff4b4b","description":"Multi-agent collaboration. claude.ai/code web."},{"id":"ail-playwright","label":"Playwright MCP","type":"tool","status":"installed-unwired","color":"#f59e0b","description":"Browser automation v0.0.75. Not yet wired to MCP config."}]}]},{"id":"howto","label":"Claude HowTo v2.1.160","type":"cluster","color":"#8b5cf6","path":"~/Downloads/claude-howto-main/","description":"100+ files, 10 categories, 125 total features. #1 trending Claude Code resource. Commands/Memory/Skills/Subagents/MCP/Hooks/Plugins/Checkpoints/Advanced/CLI.","children":[{"id":"howto-slash-commands","label":"01. Slash Commands","type":"component","color":"#f59e0b","description":"8 example commands. Install to .claude/commands/. Built-in: 60+ commands including /plan, /rewind, /checkpoint, /recap, /btw.","path":"~/Downloads/claude-howto-main/01-slash-commands/","children":[{"id":"howto-cmd-optimize","label":"/optimize","type":"subtool","description":"Code optimization analyzer \u2014 find performance bottlenecks"},{"id":"howto-cmd-pr","label":"/pr","type":"subtool","description":"Pull request prep: summary, checklist, risk assessment"},{"id":"howto-cmd-commit","label":"/commit","type":"subtool","description":"Conventional commit message generator"},{"id":"howto-cmd-api-docs","label":"/generate-api-docs","type":"subtool","description":"Auto-generate API documentation from code"},{"id":"howto-cmd-cicd","label":"/setup-ci-cd","type":"subtool","description":"CI/CD pipeline setup: GitHub Actions, Docker"},{"id":"howto-cmd-unit-test","label":"/unit-test-expand","type":"subtool","description":"Expand unit test coverage with edge cases"},{"id":"howto-cmd-doc-refactor","label":"/doc-refactor","type":"subtool","description":"Refactor and improve documentation quality"},{"id":"howto-cmd-push-all","label":"/push-all","type":"subtool","description":"Stage, commit, push all changes in one command"}]},{"id":"howto-memory","label":"02. Memory","type":"component","color":"#34d399","description":"7 memory types. CLAUDE.md at project/directory/global scope. Auto-loaded persistent context across sessions.","path":"~/Downloads/claude-howto-main/02-memory/","children":[{"id":"howto-mem-project","label":"project-CLAUDE.md","type":"subtool","description":"Team project standards \u2192 ./CLAUDE.md"},{"id":"howto-mem-directory","label":"directory-api-CLAUDE.md","type":"subtool","description":"API-specific rules \u2192 ./src/api/CLAUDE.md"},{"id":"howto-mem-personal","label":"personal-CLAUDE.md","type":"subtool","description":"Personal dev preferences \u2192 ~/.claude/CLAUDE.md"}]},{"id":"howto-skills","label":"03. Skills","type":"component","color":"#f472b6","description":"6 complete skills with SKILL.md + scripts + templates. Auto-invoked capabilities. Skill-maxxing: focus, trigger, step-by-step, <80 lines.","path":"~/Downloads/claude-howto-main/03-skills/","children":[{"id":"howto-skill-code-review","label":"code-review-specialist","type":"subtool","description":"Security + performance + quality review. analyze-metrics.py + compare-complexity.py"},{"id":"howto-skill-blog-draft","label":"blog-draft","type":"subtool","description":"Blog post drafting with brand voice"},{"id":"howto-skill-brand-voice","label":"brand-voice","type":"subtool","description":"Brand tone consistency enforcer"},{"id":"howto-skill-claude-md","label":"claude-md","type":"subtool","description":"Auto-generate CLAUDE.md memory files"},{"id":"howto-skill-doc-gen","label":"doc-generator","type":"subtool","description":"API + code documentation generator"},{"id":"howto-skill-refactor","label":"refactor","type":"subtool","description":"Systematic code refactoring with analysis"}]},{"id":"howto-subagents","label":"04. Subagents","type":"component","color":"#60a5fa","description":"11 specialized agents. Each has own context window, tools, system prompt. Install to .claude/agents/.","path":"~/Downloads/claude-howto-main/04-subagents/","children":[{"id":"howto-agent-code-reviewer","label":"code-reviewer","type":"subtool","description":"Full code review specialist"},{"id":"howto-agent-clean-code","label":"clean-code-reviewer","type":"subtool","description":"Clean code principles enforcer"},{"id":"howto-agent-debugger","label":"debugger","type":"subtool","description":"Systematic bug investigation agent"},{"id":"howto-agent-data-sci","label":"data-scientist","type":"subtool","description":"Data analysis + visualization agent"},{"id":"howto-agent-doc-writer","label":"documentation-writer","type":"subtool","description":"Technical doc + README writer"},{"id":"howto-agent-impl","label":"implementation-agent","type":"subtool","description":"Full feature implementation agent"},{"id":"howto-agent-perf","label":"performance-optimizer","type":"subtool","description":"Profiling + optimization specialist"},{"id":"howto-agent-secure","label":"secure-reviewer","type":"subtool","description":"Security audit + OWASP checker"},{"id":"howto-agent-test","label":"test-engineer","type":"subtool","description":"Test suite architect"}]},{"id":"howto-mcp","label":"05. MCP Servers","type":"component","color":"#fb923c","description":"4 MCP configs: GitHub, database (PostgreSQL), filesystem, multi-server. Real-time external data access.","path":"~/Downloads/claude-howto-main/05-mcp/","children":[{"id":"howto-mcp-github","label":"github-mcp.json","type":"subtool","description":"GitHub: PRs, issues, code search, commits"},{"id":"howto-mcp-db","label":"database-mcp.json","type":"subtool","description":"PostgreSQL: direct SQL queries from Claude"},{"id":"howto-mcp-fs","label":"filesystem-mcp.json","type":"subtool","description":"Extended filesystem beyond project dir"},{"id":"howto-mcp-multi","label":"multi-mcp.json","type":"subtool","description":"Multiple MCP servers in one config"}]},{"id":"howto-hooks","label":"06. Hooks","type":"component","color":"#f87171","description":"8 example hooks. 29 event types. Shell/HTTP/LLM/MCP/subagent actions triggered by PreToolUse, PostToolUse, SessionStart, Stop.","path":"~/Downloads/claude-howto-main/06-hooks/","children":[{"id":"howto-hook-pre-commit","label":"pre-commit.sh","type":"subtool","description":"PreToolUse:Bash \u2192 blocks bad commits"},{"id":"howto-hook-log-bash","label":"log-bash.sh","type":"subtool","description":"Logs every Bash command to file"},{"id":"howto-hook-format","label":"format-code.sh","type":"subtool","description":"PostToolUse:Edit \u2192 auto-format on save"},{"id":"howto-hook-security","label":"security-scan.sh","type":"subtool","description":"Blocks destructive commands"},{"id":"howto-hook-dep-check","label":"dependency-check.sh","type":"subtool","description":"Validates package.json dependencies"},{"id":"howto-hook-notify","label":"notify-team.sh","type":"subtool","description":"PostToolUse \u2192 Slack/webhook notify"},{"id":"howto-hook-context","label":"context-tracker.py","type":"subtool","description":"Tracks token usage per session (tiktoken)"},{"id":"howto-hook-session-end","label":"session-end.sh","type":"subtool","description":"Stop hook \u2192 cleanup + summary save"}]},{"id":"howto-plugins","label":"07. Plugins","type":"component","color":"#a78bfa","description":"3 complete plugins. Highest-level extension: bundles commands + agents + MCP + hooks into one installable package.","path":"~/Downloads/claude-howto-main/07-plugins/","children":[{"id":"howto-plugin-pr-review","label":"pr-review","type":"subtool","description":"/pr-review command + code-reviewer agent + pre-commit hook"},{"id":"howto-plugin-devops","label":"devops-automation","type":"subtool","description":"CI/CD + deploy + monitor: /setup-ci-cd + deployment agent"},{"id":"howto-plugin-docs","label":"documentation","type":"subtool","description":"/doc command + documentation-writer agent + doc hooks"}]},{"id":"howto-checkpoints","label":"08. Checkpoints","type":"component","color":"#22d3ee","description":"Save/rewind conversation state. Auto-created each prompt. /rewind or Esc\u00d72. Includes messages, file edits, tool history. Safe multi-path experimentation.","path":"~/Downloads/claude-howto-main/08-checkpoints/"},{"id":"howto-advanced","label":"09. Advanced Features","type":"component","color":"#e879f9","description":"Planning mode (/plan), Ultraplan, extended thinking, auto mode, background tasks, git worktrees, sandboxing, channels, voice dictation, remote control.","path":"~/Downloads/claude-howto-main/09-advanced-features/","children":[{"id":"howto-adv-plan","label":"Planning Mode","type":"subtool","description":"/plan \u2192 design + confirm before any code. ExitPlanMode gates execution."},{"id":"howto-adv-ultraplan","label":"Ultraplan","type":"subtool","description":"Cloud plan drafting for complex multi-phase tasks"},{"id":"howto-adv-thinking","label":"Extended Thinking","type":"subtool","description":"Deep reasoning for hard problems: thinking: {type: adaptive}"},{"id":"howto-adv-auto","label":"Auto Mode","type":"subtool","description":"Autonomous operation: allowedTools, permission levels"},{"id":"howto-adv-worktree","label":"Git Worktrees","type":"subtool","description":"Parallel isolated agent work on separate branches"},{"id":"howto-adv-sandbox","label":"Sandboxing","type":"subtool","description":"Containerized execution for untrusted code"},{"id":"howto-adv-channels","label":"Channels","type":"subtool","description":"Slack/web session access to Claude Code"},{"id":"howto-adv-voice","label":"Voice Dictation","type":"subtool","description":"Speak prompts \u2192 transcribed to Claude input"}]},{"id":"howto-cli","label":"10. CLI Reference","type":"component","color":"#4ade80","description":"Full flag reference: -p (print/non-interactive), --resume, --model, --output-format json, --add-dir, --allowedTools, --max-turns. SDK integration.","path":"~/Downloads/claude-howto-main/10-cli/","children":[{"id":"howto-cli-print","label":"Print Mode (-p)","type":"subtool","description":"claude -p 'prompt' \u2014 non-interactive for scripts/CI/SDK"},{"id":"howto-cli-resume","label":"--resume [session-id]","type":"subtool","description":"Resume prior session by ID or last session"},{"id":"howto-cli-output","label":"--output-format json","type":"subtool","description":"JSON/streaming-json output for programmatic use"},{"id":"howto-cli-model","label":"--model / --fast","type":"subtool","description":"Switch model or toggle fast Opus mode"},{"id":"howto-cli-turns","label":"--max-turns N","type":"subtool","description":"Cap agentic turns \u2014 safety for automated runs"}]},{"id":"howto-catalog","label":"CATALOG.md","type":"module","description":"Feature inventory: 60+ built-in commands, 17 subagents, 15 skills, 3 plugins, 9 MCP servers, 8 hooks, 7 memory types. 125 total.","path":"~/Downloads/claude-howto-main/CATALOG.md"},{"id":"howto-roadmap","label":"LEARNING-ROADMAP.md","type":"module","description":"Self-assessment quiz \u2192 3 levels (beginner/intermediate/advanced). Level 1: 3hr. Level 2: 5hr. Level 3: 5hr. Mermaid flowchart path.","path":"~/Downloads/claude-howto-main/LEARNING-ROADMAP.md"},{"id":"howto-quick-ref","label":"QUICK_REFERENCE.md","type":"module","description":"Install cheat sheet: one command per feature. cp/mv install paths for all 10 sections.","path":"~/Downloads/claude-howto-main/QUICK_REFERENCE.md"},{"id":"howto-concepts","label":"claude_concepts_guide.md","type":"module","description":"Deep concept guide: context windows, token mechanics, skill-maxxing, recursive building, agent architecture.","path":"~/Downloads/claude-howto-main/claude_concepts_guide.md"}]}]};
-let N=[],L=[],M={};
-function flat(n,p,d){d=d||0;var o={id:n.id,label:n.label,type:n.type,color:n.color||(p?p.color:'#888'),status:n.status,path:n.path,description:n.description,meta:n.meta,data:n.data,stack:n.stack,graph_nodes:n.graph_nodes,version:n.version,files:n.files,skills:n.skills,depth:d,parent:p?p.id:null,x:0,y:0,vx:0,vy:0};N.push(o);M[o.id]=o;if(p)L.push({source:p.id,target:n.id});if(n.children)n.children.forEach(c=>flat(c,n,d+1));}
-flat(D,null,0);
-document.getElementById('sn').textContent=N.length;
-
-function buildNav(){var nav=document.getElementById('nav');var r=document.createElement('div');r.className='ti';r.style.paddingLeft='14px';var rd=document.createElement('span');rd.textContent='⬡';rd.style.color=D.color;r.appendChild(rd);r.appendChild(document.createTextNode(' '+D.label));r.onclick=()=>sel('root');nav.appendChild(r);(D.children||[]).forEach(cl=>{var sec=document.createElement('div');sec.className='ts';var hdr=document.createElement('div');hdr.className='th open';var dd=document.createElement('div');dd.className='d';dd.style.background=cl.color;hdr.appendChild(dd);hdr.appendChild(document.createTextNode(cl.label));var a=document.createElement('span');a.className='arr';a.textContent='▶';hdr.appendChild(a);var ch=document.createElement('div');ch.className='tc open';hdr.onclick=()=>{hdr.classList.toggle('open');ch.classList.toggle('open')};(cl.children||[]).forEach(it=>{var el=document.createElement('div');el.className='ti';el.dataset.id=it.id;var dot=document.createElement('span');dot.textContent='●';dot.style.cssText='color:'+(it.color||cl.color)+';font-size:8px';el.appendChild(dot);el.appendChild(document.createTextNode(' '+it.label));if(it.graph_nodes){var b=document.createElement('span');b.className='badge';b.textContent=it.graph_nodes;el.appendChild(b);}el.onclick=()=>sel(it.id);ch.appendChild(el);});sec.appendChild(hdr);sec.appendChild(ch);nav.appendChild(sec);});}
-buildNav();
-
-var svg=d3.select('#gc');
-var W=document.getElementById('main').clientWidth,H=document.getElementById('main').clientHeight;
-svg.attr('width',W).attr('height',H);
-var g=svg.append('g');
-svg.call(d3.zoom().scaleExtent([.2,4]).on('zoom',e=>g.attr('transform',e.transform)));
-var ld=L.map(l=>{return{source:M[l.source],target:M[l.target]}}).filter(l=>l.source&&l.target);
-function nr(d){return d.depth===0?18:d.depth===1?12:d.depth===2?8:5}
-var sim=d3.forceSimulation(N).force('link',d3.forceLink(ld).id(d=>d.id).distance(d=>d.source.depth===0?120:d.source.depth===1?80:50).strength(.4)).force('charge',d3.forceManyBody().strength(d=>d.depth===0?-800:d.depth===1?-300:-120)).force('center',d3.forceCenter(W/2,H/2)).force('col',d3.forceCollide().radius(d=>nr(d)+4));
-var lk=g.append('g').selectAll('line').data(ld).join('line').attr('class','link');
-var nd=g.append('g').selectAll('g').data(N).join('g').attr('class',d=>'node'+(d.type==='tool'||d.type==='model'?' tool-node':'')).call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y}).on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null}));
-nd.append('circle').attr('r',nr).attr('fill',d=>d.color||'#888').attr('fill-opacity',d=>d.depth===0?1:.75).attr('stroke',d=>d.depth<=1?d.color:'none').attr('stroke-opacity',.3).attr('stroke-width',2);
-nd.append('text').attr('dy',d=>nr(d)+12).attr('text-anchor','middle').attr('font-size',d=>d.depth===0?12:d.depth===1?10:9).attr('font-weight',d=>d.depth<=1?'700':'400').attr('fill',d=>d.depth<=1?d.color:'rgba(246,244,242,.55)').text(d=>d.label.length>18?d.label.slice(0,16)+'...':d.label);
-sim.on('tick',()=>{lk.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);nd.attr('transform',d=>`translate(${d.x},${d.y})`)});
-
-var tip=document.getElementById('tip'),tt=document.getElementById('tt'),ty2=document.getElementById('ty');
-nd.on('mouseover',(e,d)=>{tip.style.opacity='1';tt.textContent=d.label;ty2.textContent=d.type+(d.depth>0?' depth '+d.depth:'')}).on('mousemove',e=>{tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-8)+'px'}).on('mouseout',()=>tip.style.opacity='0').on('click',(e,d)=>sel(d.id));
-
-function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
-function mkr(k,v){var r=mk('div','dr');r.appendChild(mk('div','dk',k));r.appendChild(mk('div','dv',v));return r}
-function renderDetail(d){
-  var p=document.getElementById('detail');while(p.firstChild)p.removeChild(p.firstChild);
-  p.appendChild(mk('div','dt',d.type));p.appendChild(mk('div','dn',d.label));
-  if(d.status){var sb=mk('div','sb s-'+d.status.replace(/\s+/g,'-'),d.status);p.appendChild(sb);}
-  if(d.description)p.appendChild(mk('div','dd',d.description));
-  if(d.path)p.appendChild(mkr('path',d.path));
-  if(d.version)p.appendChild(mkr('version',d.version));
-  if(d.graph_nodes)p.appendChild(mkr('nodes',d.graph_nodes.toLocaleString()));
-  ['stack','skills','files'].forEach(key=>{if(d[key]&&d[key].length){var row=mk('div','dr');row.appendChild(mk('div','dk',key));var v=mk('div','dv');d[key].forEach(s=>v.appendChild(mk('span','dtag',s)));row.appendChild(v);p.appendChild(row);}});
-  if(d.meta){var s=mk('div','dsec');s.appendChild(mk('div','dst','Meta'));Object.keys(d.meta).forEach(k=>s.appendChild(mkr(k,String(d.meta[k]))));p.appendChild(s);}
-  if(d.data){var vals=Object.values(d.data),mx=Math.max(...vals);var s=mk('div','dsec');s.appendChild(mk('div','dst','Activity'));Object.keys(d.data).sort((a,b)=>d.data[b]-d.data[a]).forEach(k=>{var v=d.data[k],pct=(v/mx*100).toFixed(0);var row=mk('div','br');row.appendChild(mk('div','bl',k));var bt=mk('div','bt');var bf=mk('div','bf');bf.style.width=pct+'%';bf.style.background=d.color||'#ff4b4b';bt.appendChild(bf);row.appendChild(bt);row.appendChild(mk('div','bc',String(v)));s.appendChild(row);});p.appendChild(s);}
-  // Animate panel in
-  if(window.anime){anime({targets:'#detail .dn,#detail .dt,#detail .dd,#detail .dr,#detail .sb,#detail .dsec',opacity:[0,1],translateY:[6,0],duration:280,delay:anime.stagger(30),easing:'easeOutQuart'});}
-}
-function sel(id){var d=M[id];if(!d)return;var con={};con[id]=true;ld.forEach(l=>{if(l.source.id===id)con[l.target.id]=true;if(l.target.id===id)con[l.source.id]=true});nd.classed('dim',n=>!con[n.id]);nd.classed('hl',n=>n.id===id);lk.classed('hl',l=>l.source.id===id||l.target.id===id);document.querySelectorAll('.ti').forEach(e=>e.classList.remove('active'));var el=document.querySelector('.ti[data-id="'+id+'"]');if(el){el.classList.add('active');el.scrollIntoView({block:'nearest'})}renderDetail(d);}
-var TOOL_CHALLENGES={
-  'tool-claude':['Run /graphify on ~/AI-OS/repos/ and read the GRAPH_REPORT','Add a new skill: write SKILL.md + test with one real prompt','Use /ultraplan to map your top 3 projects into a weekly OKR'],
-  'tool-playwright':['Wire playwright-mcp to ~/.claude/settings.json MCP config','Scrape one competitor site — save HTML to ~/AI-OS/outputs/','Record a browser session with Playwright and extract all CTAs'],
-  'tool-graphify':['Run: bash ~/AI-OS/scripts/grow.sh --open','Graphify a new GitHub repo you want to understand','Query the graph: /graphify query "what dependencies are shared most"'],
-  'tool-ollama':['Summarize 5 files from ~/AI-OS/logs/ using llama3.2 via ai.sh','Run: ollama run qwen2.5-coder:3b — fix a Python script','Use Ollama as a first-pass draft before Claude refines it'],
-  'tool-ghl':['Review ~/AI-OS/logs/content-bot.log — post the best entry to GHL','Audit 3 UMAS GHL funnels for single-CTA rule violations','Export GHL contacts CSV and load into a new list'],
-  'tool-n8n':['Open n8n. Create one automation triggered by a webhook','Connect n8n to GHL: auto-tag leads who visit UMAS service pages','Build a cron in n8n that pings content-bot every 24h'],
-  'tool-gemini':['Run: gemini -p "analyze this project: ~/AI-OS" — compare to Claude','Use Gemini 2.5 1M context to read an entire repo at once','Ask Gemini for a second opinion on your top ranked prompt'],
-  'tool-obsidian':['Open vault. Add 3 manual notes linked to Brain-Tree nodes','Review Brain-Tree/INDEX.md — find one stale node and update it','Create an Obsidian Canvas showing UMAS content pipeline']
+// ─── Node data ─────────────────────────────────────────────
+const NODES = {
+  claude:      {type:'AGENT',name:'Claude Code',desc:'Primary AI orchestrator. Model Sonnet 4.6. 679 skills. Manages all code, memory, and execution.',path:'~/.claude/',status:'active',signal:'agent',tags:['Sonnet 4.6','679 skills','active']},
+  gemini:      {type:'AGENT',name:'Gemini CLI',desc:'Google Search grounding. 1M token context window. Free tier 60 req/min. Second opinion AI.',path:'~/gemini-cli/',status:'active',signal:'agent',tags:['1M ctx','free tier','search']},
+  ollama:      {type:'AGENT',name:'Ollama',desc:'Local model router. qwen2.5-coder:3b for simple tasks, llama3.2 for private/long content.',path:'localhost:11434',status:'idle',signal:'agent',tags:['local','qwen2.5','llama3.2']},
+  graphify:    {type:'AGENT',name:'Graphify',desc:'Knowledge graph builder. Converts file corpora into navigable HTML + JSON graphs.',path:'/opt/homebrew/bin/graphify',status:'idle',signal:'agent',tags:['knowledge graph','HTML+JSON']},
+  'content-bot':{type:'TASK BOT',name:'Content Bot',desc:'GHL social media publisher. Ollama local generation + leadconnectorhq.com API. Location 5opdoL1faiu1kTiGZ1Vx.',path:'~/content-bot/',status:'active',signal:'task',tags:['GHL','Ollama','active']},
+  'deploy-bot': {type:'TASK BOT',name:'Deploy Bot',desc:'LaunchAgent com.aios.brain-deploy.plist. Fires every 60s. Pushes brain-tree.html to GitHub Pages automatically.',path:'~/Library/LaunchAgents/',status:'active',signal:'task',tags:['60s interval','GitHub Pages','auto']},
+  'medicaid-bot':{type:'TASK BOT',name:'Medicaid Agent',desc:'Illinois Medicaid senior targeting. Google Sheets + Docs integration. qwen2.5-coder:3b model.',path:'~/medicaid-agent/',status:'idle',signal:'task',tags:['Illinois','Sheets','qwen2.5']},
+  watchdog:    {type:'TASK BOT',name:'Tab Watchdog',desc:'Chrome tab cron every 15 min. Whitelist at ~/AI-OS/state/tab-whitelist.txt. Frees disk automatically.',path:'~/AI-OS/state/',status:'active',signal:'task',tags:['cron 15min','Chrome','disk']},
+  umas:        {type:'PROJECT',name:'UMAS',desc:'Elder care nonprofit Chicagoland IL. CMS: GoHighLevel. SEO complete, service pages, email sequences, schema markup live.',path:'~/AI-OS/outputs/umas/',status:'active',signal:'cascade',tags:['umasinc.com','GHL','elder care']},
+  'goat-life': {type:'PROJECT',name:'GOAT Life',desc:'Pixar-style animated golf comedy. 7 locked characters. EP 1-3 done. Firefly → Nano Banana → Kling → ElevenLabs → CapCut.',path:'~/AAA/GOAT-LIFE/',status:'active',signal:'cascade',tags:['EP 1-3 done','golfonanytee.com']},
+  mafs:        {type:'PROJECT',name:'MAFS',desc:'Family services org. Interactive GHL form + SEO strategy. Blue brand #2c97f3.',path:'~/AI-OS/outputs/mafs/',status:'active',signal:'cascade',tags:['mafsinc.com','GHL']},
+  santoshland: {type:'PROJECT',name:'Santoshland',desc:'Ayurvedic wellness startup. Website stalled — needs resumption. Setup doc exists.',path:'~/AI-OS/outputs/santoshland/',status:'idle',signal:'cascade',tags:['Ayurveda','stalled']},
+  machina:     {type:'PROJECT',name:'Machina XRAY',desc:'Chrome extension v1.2. DOM search + DevTools panel. Load via --load-extension flag.',path:'~/machina-extension/',status:'idle',signal:'cascade',tags:['Chrome ext','v1.2']},
+  'brain-html':{type:'FILE',name:'brain-tree.html',desc:'This visualization. Auto-deployed every 60s via LaunchAgent. Rebuilt each session by build-brain-tree.py.',path:'~/AI-OS/outputs/brain-tree.html',status:'active',signal:'file',tags:['live','auto-deploy','GitHub Pages']},
+  'brain-json':{type:'FILE',name:'brain-tree.json',desc:'Source knowledge graph. 579 skills, 16 projects, 19,961 nodes, 3,199 edges. Root: Karan Amin.',path:'~/AI-OS/outputs/brain-tree.json',status:'idle',signal:'file',tags:['19,961 nodes','3,199 edges']},
+  'build-py':  {type:'SCRIPT',name:'build-brain-tree.py',desc:'Reads brain-tree.json, writes brain-tree.html. Permanently rewired to output cinematic neural version.',path:'~/AI-OS/scripts/build-brain-tree.py',status:'idle',signal:'file',tags:['Python','auto-rebuild']},
+  'session-log':{type:'FILE',name:'session-log.md',desc:'Rolling session log. Every action appended. Read on boot to restore context.',path:'~/AI-OS/logs/session-log.md',status:'active',signal:'file',tags:['live','context','boot']},
 };
-function dailySeed(){var d=new Date();return d.getFullYear()*10000+d.getMonth()*100+d.getDate();}
-function seededRand(seed,n){return((seed*9301+49297)%233280/233280*n)|0;}
-function randomTool(){
-  var toolNodes=N.filter(n=>n.type==='tool'||n.type==='model');
-  if(!toolNodes.length)return;
-  var seed=dailySeed();
-  var pick=toolNodes[seededRand(seed,toolNodes.length)];
-  var challenges=TOOL_CHALLENGES[pick.id]||['Spend 15 min exploring this tool deeply.'];
-  var challenge=challenges[seededRand(seed+1,challenges.length)];
-  nd.classed('rng-pick',n=>n.id===pick.id);
-  sel(pick.id);
-  var box=document.getElementById('challenge-box');
-  box.style.display='block';
-  box.querySelector('.cb-tool').textContent='🎲 '+pick.label;
-  box.querySelector('.cb-task').textContent=challenge;
-  if(window.anime){anime({targets:'#challenge-box',scale:[.92,1],opacity:[0,1],duration:340,easing:'easeOutBack'});}
-  setTimeout(()=>nd.classed('rng-pick',false),6000);
+
+// Signal colors per type
+const SIG_COLOR = {
+  agent:   0xff4b4b,
+  task:    0xf59e0b,
+  file:    0xa78bfa,
+  cascade: 0x34d399,
+};
+const NODE_COL = {
+  agent:   [1.0, 0.29, 0.29],
+  task:    [0.96, 0.62, 0.07],
+  project: [0.38, 0.64, 0.98],
+  skill:   [0.20, 0.83, 0.60],
+  file:    [0.65, 0.55, 0.98],
+  script:  [0.98, 0.57, 0.19],
+  cascade: [0.20, 0.83, 0.60],
+};
+function nodeTypeColor(key){
+  const n=NODES[key]; if(!n) return [0,0.72,0.9];
+  const t=n.type.toLowerCase();
+  if(t.includes('agent')) return NODE_COL.agent;
+  if(t.includes('task')) return NODE_COL.task;
+  if(t.includes('project')) return NODE_COL.project;
+  if(t.includes('file')||t.includes('script')) return NODE_COL.file;
+  return [0,0.72,0.9];
 }
-document.getElementById('search').addEventListener('input',e=>{var q=e.target.value.toLowerCase().trim();if(!q){nd.classed('dim',false).classed('hl',false);lk.classed('hl',false);return}var m={};N.forEach(n=>{if(n.label.toLowerCase().includes(q)||(n.description||'').toLowerCase().includes(q))m[n.id]=true});nd.classed('dim',n=>!m[n.id]);nd.classed('hl',n=>!!m[n.id]);lk.classed('hl',false);});
-function setV(v){document.getElementById('bf').classList.toggle('active',v==='f');document.getElementById('bt2').classList.toggle('active',v==='t');document.getElementById('gc').style.display=v==='f'?'block':'none';var tc=document.getElementById('tv');tc.style.display=v==='t'?'block':'none';if(v==='t'&&!tc.dataset.built){buildTree(tc);tc.dataset.built='1'}}
-function buildTree(c){function rn(n,d){var w=document.createElement('div');w.style.cssText='padding-left:'+(d*20+14)+'px;margin:2px 0';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:7px;padding:4px 7px;border-radius:6px;cursor:pointer';var dot=document.createElement('span');dot.textContent='●';dot.style.cssText='color:'+(n.color||'#888')+';font-size:8px';row.appendChild(dot);var lbl=document.createElement('span');lbl.textContent=n.label;lbl.style.cssText='font-size:12px;color:#f6f4f2';row.appendChild(lbl);if(n.graph_nodes){var cnt=document.createElement('span');cnt.textContent=n.graph_nodes;cnt.style.cssText='font-size:9px;color:#888;margin-left:auto';row.appendChild(cnt)}row.onmouseover=()=>row.style.background='rgba(255,255,255,.04)';row.onmouseout=()=>row.style.background='';row.onclick=()=>sel(n.id);w.appendChild(row);if(n.children)n.children.forEach(ch=>w.appendChild(rn(ch,d+1)));return w;}c.appendChild(rn(D,0));}
-window.addEventListener('resize',()=>{W=document.getElementById('main').clientWidth;H=document.getElementById('main').clientHeight;svg.attr('width',W).attr('height',H);sim.force('center',d3.forceCenter(W/2,H/2)).alpha(.1).restart();});
-setTimeout(()=>sel('root'),900);
 
-</script>
-<script>
+// ─── THREE SETUP ──────────────────────────────────────────
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
 
-(function(){
-  var canvas=document.getElementById('hologram-canvas');
-  if(!canvas||!window.THREE)return;
-  var W=window.innerWidth,H=window.innerHeight;
-  var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.setSize(W,H);
-  var scene=new THREE.Scene();
-  var camera=new THREE.PerspectiveCamera(60,W/H,.1,200);
-  camera.position.set(0,0,32);
-  // Fibonacci sphere neurons
-  var NC=240,phi=Math.PI*(3-Math.sqrt(5)),pos=[];
-  for(var i=0;i<NC;i++){
-    var y=1-(i/(NC-1))*2,r=Math.sqrt(1-y*y),th=phi*i;
-    pos.push(new THREE.Vector3(Math.cos(th)*r*14,y*10,Math.sin(th)*r*14));
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 500);
+cam.position.z = 46;
+
+// ─── BRAIN MESH: two halves of a hemisphere wireframe ────
+function makeBrainMesh(){
+  // Left hemisphere
+  const g1 = new THREE.SphereGeometry(13.5, 28, 22, 0, Math.PI*2, 0, Math.PI*0.55);
+  const m1 = new THREE.MeshBasicMaterial({color:0x001a2e, wireframe:true, transparent:true, opacity:0.07});
+  const h1 = new THREE.Mesh(g1, m1); h1.position.x=-1.5; scene.add(h1);
+  // Right hemisphere
+  const g2 = new THREE.SphereGeometry(13.2, 26, 20, 0, Math.PI*2, 0, Math.PI*0.55);
+  const m2 = new THREE.MeshBasicMaterial({color:0x001a2e, wireframe:true, transparent:true, opacity:0.07});
+  const h2 = new THREE.Mesh(g2, m2); h2.position.x=1.5; scene.add(h2);
+  // Corpus callosum — flattened ellipsoid connecting hemispheres
+  const g3 = new THREE.SphereGeometry(1, 16, 8);
+  g3.applyMatrix4(new THREE.Matrix4().makeScale(5.5, 0.5, 2.5));
+  const m3 = new THREE.MeshBasicMaterial({color:0x002233, wireframe:true, transparent:true, opacity:0.06});
+  const cc = new THREE.Mesh(g3,m3); cc.position.y=0.5; scene.add(cc);
+  return [h1, h2, cc];
+}
+const brainParts = makeBrainMesh();
+
+// ─── CORTEX NEURONS: layered onto brain surface ───────────
+// 3 cortical layers at different depths
+const LAYERS = [
+  {count:160, rad:13.8, opacity:0.85, size:0.24},
+  {count:80,  rad:11.5, opacity:0.55, size:0.18},
+  {count:40,  rad:9.0,  opacity:0.35, size:0.14},
+];
+const allPos = [];
+const layerGeos = [];
+
+LAYERS.forEach(L=>{
+  const pts = new Float32Array(L.count*3);
+  const cols = new Float32Array(L.count*3);
+  const phi = Math.PI*(3-Math.sqrt(5));
+  for(let i=0;i<L.count;i++){
+    const y = 1-(i/(L.count-1))*2;
+    const r = Math.sqrt(Math.max(0,1-y*y));
+    const theta = phi*i;
+    // Flatten vertically to look like cortex, not full sphere
+    const x = Math.cos(theta)*r*(L.rad+Math.sin(i*0.7)*1.5);
+    const yy = y*(L.rad*0.7)+Math.sin(i*1.3)*0.8;
+    const z = Math.sin(theta)*r*(L.rad+Math.cos(i*1.1)*1.2);
+    pts[i*3]=x; pts[i*3+1]=yy; pts[i*3+2]=z;
+    if(L.rad>12) allPos.push(new THREE.Vector3(x,yy,z));
+    cols[i*3]=0; cols[i*3+1]=0.62; cols[i*3+2]=0.82;
   }
-  var ptGeo=new THREE.BufferGeometry().setFromPoints(pos);
-  var ptMat=new THREE.PointsMaterial({color:0x00e5ff,size:.16,transparent:true,opacity:.55});
-  scene.add(new THREE.Points(ptGeo,ptMat));
-  // Edges
-  var lv=[];
-  for(var i=0;i<NC;i++){
-    var near=[];
-    for(var j=0;j<NC;j++){if(i!==j&&pos[i].distanceTo(pos[j])<5.4)near.push(j);}
-    near.slice(0,3).forEach(function(j){lv.push(pos[i].x,pos[i].y,pos[i].z,pos[j].x,pos[j].y,pos[j].z);});
-  }
-  var lGeo=new THREE.BufferGeometry();
-  lGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lv),3));
-  scene.add(new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.07})));
-  // Scan sweep
-  var swGeo=new THREE.PlaneGeometry(36,.28);
-  var swMat=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.13,side:THREE.DoubleSide});
-  var sw=new THREE.Mesh(swGeo,swMat);scene.add(sw);
-  var sy=-11,sd=1,t=0;
-  function tick(){
-    requestAnimationFrame(tick);
-    t+=.004;scene.rotation.y=t*.11;
-    sy+=sd*.1;if(sy>11||sy<-11)sd*=-1;sw.position.y=sy;
-    renderer.render(scene,camera);
-  }
-  tick();
-  window.addEventListener('resize',function(){
-    var nw=window.innerWidth,nh=window.innerHeight;
-    camera.aspect=nw/nh;camera.updateProjectionMatrix();
-    renderer.setSize(nw,nh);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pts,3));
+  g.setAttribute('color',new THREE.BufferAttribute(cols,3));
+  layerGeos.push({geo:g, cols});
+  const m = new THREE.PointsMaterial({
+    size:L.size, vertexColors:true, transparent:true,
+    opacity:L.opacity, blending:THREE.AdditiveBlending, depthWrite:false
   });
-})();
+  scene.add(new THREE.Points(g,m));
+});
 
+const NC = allPos.length; // primary layer count
+const pcol = layerGeos[0].cols;
+const BASE = [0.0, 0.62, 0.82];
+
+// ─── AXON EDGES (primary layer only) ─────────────────────
+const adj = Array.from({length:NC},()=>[]);
+const everts=[];
+const DIST=6.8;
+for(let i=0;i<NC;i++){
+  const near=[];
+  for(let j=i+1;j<NC;j++){
+    if(allPos[i].distanceTo(allPos[j])<DIST) near.push(j);
+  }
+  near.slice(0,4).forEach(j=>{
+    adj[i].push(j); adj[j].push(i);
+    everts.push(allPos[i].x,allPos[i].y,allPos[i].z,allPos[j].x,allPos[j].y,allPos[j].z);
+  });
+}
+const lGeo=new THREE.BufferGeometry();
+lGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(everts),3));
+const lMat=new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:0.045,blending:THREE.AdditiveBlending});
+scene.add(new THREE.LineSegments(lGeo,lMat));
+
+// ─── SCAN SWEEP ───────────────────────────────────────────
+const swGeo=new THREE.PlaneGeometry(34,0.3);
+const swMat=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:0.07,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
+const sweep=new THREE.Mesh(swGeo,swMat); scene.add(sweep);
+
+// ─── GLOW HALO ────────────────────────────────────────────
+const haloGeo=new THREE.SphereGeometry(14.5,32,20);
+const haloMat=new THREE.MeshBasicMaterial({color:0x001833,transparent:true,opacity:0.18,side:THREE.BackSide,blending:THREE.AdditiveBlending});
+scene.add(new THREE.Mesh(haloGeo,haloMat));
+const halo2Geo=new THREE.SphereGeometry(16,24,16);
+const halo2Mat=new THREE.MeshBasicMaterial({color:0x000e22,transparent:true,opacity:0.08,side:THREE.BackSide,blending:THREE.AdditiveBlending});
+scene.add(new THREE.Mesh(halo2Geo,halo2Mat));
+
+// ─── FLASH STATE ─────────────────────────────────────────
+const flash=new Float32Array(NC);
+const flashCol=Array.from({length:NC},()=>[...BASE]);
+
+// ─── SIGNAL SYSTEM ────────────────────────────────────────
+const signals=[], pool=[];
+
+function getSig(){
+  if(pool.length) return pool.pop();
+  const geo=new THREE.SphereGeometry(0.32,5,5);
+  const mat=new THREE.MeshBasicMaterial({color:0x00ffff,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false});
+  return new THREE.Mesh(geo,mat);
+}
+
+function fire(from,to,type='cascade'){
+  if(signals.length>=32) return;
+  const m=getSig(); m.visible=true; scene.add(m);
+  m.material.color.setHex(SIG_COLOR[type]||0x00ffff);
+  signals.push({from,to,t:0,spd:0.007+Math.random()*0.006,mesh:m,type,prev:from});
+}
+
+function fireRand(type='cascade'){
+  if(signals.length>=24) return;
+  const f=Math.floor(Math.random()*NC);
+  const nb=adj[f]; if(!nb.length) return;
+  fire(f,nb[Math.floor(Math.random()*nb.length)],type);
+}
+
+function burst(nodeIdx, type='agent'){
+  adj[nodeIdx].slice(0,6).forEach(n=>fire(nodeIdx,n,type));
+  const c=NODE_COL[type]||NODE_COL.agent;
+  flash[nodeIdx]=Math.min(flash[nodeIdx]+2.2,2.8);
+  flashCol[nodeIdx]=[c[0],c[1],c[2]];
+  totalSignals++;
+}
+
+// ─── ORBIT CONTROLS ───────────────────────────────────────
+let drag=false,lx=0,ly=0,vx=0,vy=0,rx=0,ry=0;
+const centerEl=document.getElementById('center');
+centerEl.addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY;vx=vy=0});
+window.addEventListener('mousemove',e=>{
+  if(!drag) return;
+  vx+=(e.clientX-lx)*0.003; vy+=(e.clientY-ly)*0.003;
+  lx=e.clientX; ly=e.clientY;
+});
+window.addEventListener('mouseup',()=>drag=false);
+centerEl.addEventListener('wheel',e=>{cam.position.z=Math.min(80,Math.max(22,cam.position.z+e.deltaY*0.04))},{passive:true});
+
+// ─── SIDEBAR CLICKS ───────────────────────────────────────
+let totalSignals=0, totalFiles=0;
+const AGENT_TYPES=['agent','task bot'];
+
+function showDetail(key){
+  const d=NODES[key]; if(!d) return;
+  const r=document.getElementById('right');
+  const t=d.type.toLowerCase();
+  const sigType = d.signal||'cascade';
+  r.innerHTML=`
+    <div class="r-type">${d.type}</div>
+    <div class="r-name">${d.name}</div>
+    <div class="r-desc">${d.desc}</div>
+    <div class="r-row"><div class="r-k">Path</div><div class="r-v">${d.path}</div></div>
+    <div class="r-row"><div class="r-k">Status</div><div class="r-v" style="color:${d.status==='active'?'#34d399':'rgba(255,255,255,.4)'}">${d.status}</div></div>
+    <div class="r-row"><div class="r-k">Signal</div><div class="r-v">${sigType}</div></div>
+    <div class="r-tags">${(d.tags||[]).map(t=>`<span class="r-tag">${t}</span>`).join('')}</div>
+    <button class="r-close" onclick="document.getElementById('right').innerHTML='<div class=\\'r-empty\\'>Click any node<br>or sidebar item<br>to inspect</div>'">Close</button>
+  `;
+  burst(Math.floor(Math.random()*NC), sigType);
+}
+
+document.querySelectorAll('.litem').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.litem').forEach(e=>e.classList.remove('on'));
+    el.classList.add('on');
+    showDetail(el.dataset.key);
+  });
+});
+
+// ─── ACTIVITY FEED ────────────────────────────────────────
+const FEED_MSGS=[
+  {color:'#ff4b4b',text:'Claude Code → brain-tree.html'},
+  {color:'#f59e0b',text:'Deploy Bot → GitHub Pages push'},
+  {color:'#a78bfa',text:'session-log.md modified'},
+  {color:'#34d399',text:'Cascade: UMAS → service pages'},
+  {color:'#ff4b4b',text:'Gemini CLI → research query'},
+  {color:'#f59e0b',text:'Tab Watchdog → 3 tabs closed'},
+  {color:'#a78bfa',text:'brain-tree.json read'},
+  {color:'#34d399',text:'Cascade: deploy → GH Pages'},
+  {color:'#ff4b4b',text:'Claude Code → skill invoked'},
+  {color:'#f59e0b',text:'Content Bot → GHL post queued'},
+  {color:'#a78bfa',text:'keystroke-log.md append'},
+  {color:'#34d399',text:'Cascade: umas → hologram site'},
+];
+let feedIdx=0;
+function addFeed(){
+  const feed=document.getElementById('feed');
+  const msg=FEED_MSGS[feedIdx%FEED_MSGS.length]; feedIdx++;
+  const el=document.createElement('div');
+  el.className='feed-item';
+  el.innerHTML=`<div class="feed-dot" style="background:${msg.color};box-shadow:0 0 4px ${msg.color}"></div>${msg.text}`;
+  feed.prepend(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  if(feed.children.length>5) feed.lastChild.remove();
+  // fire matching signal type
+  const t=msg.color==='#ff4b4b'?'agent':msg.color==='#f59e0b'?'task':msg.color==='#a78bfa'?'file':'cascade';
+  fireRand(t);
+  if(t==='file') totalFiles++;
+}
+setInterval(addFeed, 2800);
+setTimeout(addFeed, 800);
+
+// ─── STAT COUNTERS ────────────────────────────────────────
+let totalSigDisplay=0;
+function updateStats(){
+  document.getElementById('sv-agents').textContent='4';
+  document.getElementById('sv-tasks').textContent='4';
+  document.getElementById('sv-signals').textContent=signals.length;
+  document.getElementById('sv-files').textContent=totalFiles;
+}
+function countUp(id,target,dur){
+  const el=document.getElementById(id),s=Date.now();
+  const f=()=>{const p=Math.min((Date.now()-s)/dur,1),e=1-Math.pow(1-p,3);el.textContent=Math.floor(e*target);if(p<1)requestAnimationFrame(f)};f();
+}
+
+// ─── CLOCK ────────────────────────────────────────────────
+function clk(){
+  const n=new Date();
+  document.getElementById('bot-time').textContent=
+    n.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' · '+
+    n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+clk(); setInterval(clk,10000);
+
+// ─── MAIN LOOP ─────────────────────────────────────────────
+let autoT=0, burstT=0, sweepY=-14, sweepDir=1, t=0, brainPulse=0;
+
+function tick(){
+  requestAnimationFrame(tick);
+  t+=0.004;
+  brainPulse+=0.02;
+
+  // orbit
+  if(!drag){vx*=0.93;vy*=0.93;}
+  rx+=vy; ry+=vx;
+  if(!drag&&Math.abs(vx)<0.0005&&Math.abs(vy)<0.0005) ry+=0.0006;
+  rx=Math.max(-1.1,Math.min(1.1,rx));
+  scene.rotation.x=rx; scene.rotation.y=ry;
+
+  // subtle brain breathing
+  const breathe=1+Math.sin(brainPulse*0.7)*0.004;
+  brainParts.forEach(p=>p.scale.set(breathe,breathe,breathe));
+
+  // sweep
+  sweepY+=sweepDir*0.07;
+  if(sweepY>14||sweepY<-14) sweepDir*=-1;
+  sweep.position.y=sweepY;
+
+  // auto fire — mix of types
+  autoT++;
+  if(autoT>20){
+    autoT=0;
+    const r=Math.random();
+    const t2=r<0.35?'agent':r<0.55?'task':r<0.75?'file':'cascade';
+    fireRand(t2);
+    if(Math.random()<0.35) fireRand('cascade');
+  }
+  burstT++;
+  if(burstT>480){
+    burstT=0;
+    const t3=Math.random()<0.5?'agent':'task';
+    burst(Math.floor(Math.random()*NC),t3);
+  }
+
+  // update signals
+  for(let i=signals.length-1;i>=0;i--){
+    const s=signals[i];
+    s.t+=s.spd;
+    if(s.t>=1){
+      flash[s.to]=Math.min(flash[s.to]+1.6,2.5);
+      const sc=NODE_COL[s.type]||NODE_COL.cascade;
+      flashCol[s.to]=[sc[0],sc[1],sc[2]];
+      if(Math.random()<0.4){
+        const nb=adj[s.to];
+        if(nb.length){
+          const nx=nb[Math.floor(Math.random()*nb.length)];
+          if(nx!==s.prev) fire(s.to,nx,'cascade');
+        }
+      }
+      s.mesh.visible=false; scene.remove(s.mesh); pool.push(s.mesh);
+      signals.splice(i,1);
+    } else {
+      s.mesh.position.lerpVectors(allPos[s.from],allPos[s.to],s.t);
+      const edge=Math.min(s.t*9,(1-s.t)*9,1.0);
+      s.mesh.material.opacity=0.95*edge;
+    }
+  }
+
+  // color update
+  for(let i=0;i<NC;i++){
+    const f=flash[i];
+    if(f>0){
+      const ff=Math.min(f,1.0);
+      const fc=flashCol[i];
+      pcol[i*3]=BASE[0]+ff*fc[0]; pcol[i*3+1]=BASE[1]+ff*fc[1]; pcol[i*3+2]=BASE[2]+ff*fc[2];
+      flash[i]=Math.max(0,f-0.028);
+    } else {
+      pcol[i*3]=BASE[0]; pcol[i*3+1]=BASE[1]; pcol[i*3+2]=BASE[2];
+    }
+  }
+  layerGeos[0].geo.attributes.color.needsUpdate=true;
+
+  updateStats();
+  renderer.render(scene,cam);
+}
+tick();
+
+// ─── RESIZE ───────────────────────────────────────────────
+window.addEventListener('resize',()=>{
+  cam.aspect=innerWidth/innerHeight;
+  cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+// initial bursts after load
+setTimeout(()=>{
+  burst(Math.floor(Math.random()*NC),'agent');
+  setTimeout(()=>burst(Math.floor(Math.random()*NC),'task'),600);
+  setTimeout(()=>burst(Math.floor(Math.random()*NC),'file'),1200);
+},500);
 </script>
 </body>
 </html>
