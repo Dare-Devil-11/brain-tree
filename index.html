@@ -9,10 +9,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 <style>
 :root{
-  --bg:#000000;--surface:rgba(0,0,0,.85);--surface2:rgba(4,4,8,.7);
-  --text:#f6f4f2;--muted:rgba(246,244,242,0.45);--border:rgba(0,229,255,0.1);
+  --bg:#000912;--surface:rgba(10,12,22,.8);--surface2:rgba(18,20,35,.65);
+  --text:#f6f4f2;--muted:rgba(246,244,242,0.45);--border:rgba(246,244,242,0.08);
   --accent:#ff4b4b;--green:#00ffaa;--cyan:#00e5ff;--blur:20px;
-  --radius:8px;--shadow:0 4px 24px rgba(0,0,0,.8);
+  --radius:8px;--shadow:0 4px 24px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',monospace;overflow:hidden}
@@ -91,17 +91,12 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
 .s-primary{background:rgba(255,75,75,.12);color:var(--accent);border:1px solid rgba(255,75,75,.2)}
 .s-prototype{background:rgba(107,114,128,.2);color:#9ca3af;border:1px solid rgba(107,114,128,.2)}
 /* ── D3 graph ── */
-.node circle{cursor:pointer;filter:drop-shadow(0 0 4px currentColor)}
-.node text{pointer-events:none;font-family:'SF Mono',monospace;fill:rgba(0,229,255,.8)}
-.link{stroke:rgba(0,229,255,.28);stroke-width:1}
-.link.hl{stroke:rgba(0,229,255,.9);stroke-width:2;opacity:.9;filter:drop-shadow(0 0 4px #00e5ff)}
-.link.link-default{stroke:rgba(0,229,255,.28);stroke-width:1}
-.link.link-file-action{stroke:rgba(16,185,129,.75);stroke-width:1.5}
-.link.link-action-key{stroke:rgba(251,191,36,.8);stroke-width:1.6}
-.link.link-file-key{stroke:rgba(245,158,11,.55);stroke-width:1.2}
-.link.link-cross{stroke:rgba(0,229,255,.42);stroke-width:1.1}
-.node.dim circle{opacity:.06;filter:none!important}.node.dim text{opacity:.04}
-.node.hl circle{stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 12px #fff)!important}
+.node circle{cursor:pointer}
+.node text{pointer-events:none;font-family:'SF Mono',monospace;fill:var(--text)}
+.link{stroke:rgba(0,229,255,.07);stroke-width:1}
+.link.hl{stroke:var(--accent);stroke-width:1.5;opacity:.55}
+.node.dim circle{opacity:.1}.node.dim text{opacity:.07}
+.node.hl circle{stroke:#fff;stroke-width:2}
 /* ── Tooltip ── */
 #tip{position:fixed;background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:8px;
   padding:7px 11px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;max-width:210px;line-height:1.6}
@@ -123,9 +118,7 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
 .cb-task{color:var(--muted)}
 /* ── Animations ── */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes node-glow{0%,100%{filter:drop-shadow(0 0 4px currentColor)}50%{filter:drop-shadow(0 0 10px currentColor)}}
-@keyframes tool-glow{0%,100%{filter:drop-shadow(0 0 5px currentColor);opacity:1}50%{filter:drop-shadow(0 0 14px currentColor);opacity:.85}}
-.node circle{animation:node-glow 3.5s ease-in-out infinite}
+@keyframes tool-glow{0%,100%{filter:drop-shadow(0 0 4px currentColor);opacity:1}50%{filter:drop-shadow(0 0 11px currentColor);opacity:.82}}
 .tool-node circle{animation:tool-glow 2.8s ease-in-out infinite}
 .node.rng-pick circle{animation:tool-glow .7s ease-in-out infinite!important;stroke:#fff!important;stroke-width:3!important}
 </style>
@@ -250,7 +243,7 @@ document.getElementById('search').addEventListener('input',e=>{var q=e.target.va
 function setV(v){document.getElementById('bf').classList.toggle('active',v==='f');document.getElementById('bt2').classList.toggle('active',v==='t');document.getElementById('gc').style.display=v==='f'?'block':'none';var tc=document.getElementById('tv');tc.style.display=v==='t'?'block':'none';if(v==='t'&&!tc.dataset.built){buildTree(tc);tc.dataset.built='1'}}
 function buildTree(c){function rn(n,d){var w=document.createElement('div');w.style.cssText='padding-left:'+(d*20+14)+'px;margin:2px 0';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:7px;padding:4px 7px;border-radius:6px;cursor:pointer';var dot=document.createElement('span');dot.textContent='●';dot.style.cssText='color:'+(n.color||'#888')+';font-size:8px';row.appendChild(dot);var lbl=document.createElement('span');lbl.textContent=n.label;lbl.style.cssText='font-size:12px;color:#f6f4f2';row.appendChild(lbl);if(n.graph_nodes){var cnt=document.createElement('span');cnt.textContent=n.graph_nodes;cnt.style.cssText='font-size:9px;color:#888;margin-left:auto';row.appendChild(cnt)}row.onmouseover=()=>row.style.background='rgba(255,255,255,.04)';row.onmouseout=()=>row.style.background='';row.onclick=()=>sel(n.id);w.appendChild(row);if(n.children)n.children.forEach(ch=>w.appendChild(rn(ch,d+1)));return w;}c.appendChild(rn(D,0));}
 window.addEventListener('resize',()=>{W=document.getElementById('main').clientWidth;H=document.getElementById('main').clientHeight;svg.attr('width',W).attr('height',H);sim.force('center',d3.forceCenter(W/2,H/2)).alpha(.1).restart();});
-setTimeout(()=>sel('root'),3500);
+setTimeout(()=>sel('root'),900);
 
 </script>
 <script>
@@ -265,51 +258,34 @@ setTimeout(()=>sel('root'),3500);
   var scene=new THREE.Scene();
   var camera=new THREE.PerspectiveCamera(60,W/H,.1,200);
   camera.position.set(0,0,32);
-  // Circular glow sprite — round dots, not squares
-  var sprC=document.createElement('canvas');sprC.width=32;sprC.height=32;
-  var sprX=sprC.getContext('2d');
-  var sprG=sprX.createRadialGradient(16,16,0,16,16,16);
-  sprG.addColorStop(0,'rgba(255,255,255,1)');
-  sprG.addColorStop(.3,'rgba(0,229,255,.7)');
-  sprG.addColorStop(1,'rgba(0,229,255,0)');
-  sprX.fillStyle=sprG;sprX.fillRect(0,0,32,32);
-  var sprTex=new THREE.CanvasTexture(sprC);
-  // Fibonacci sphere neurons — round glowing dots
-  var NC=280,phi=Math.PI*(3-Math.sqrt(5)),pos=[];
+  // Fibonacci sphere neurons
+  var NC=240,phi=Math.PI*(3-Math.sqrt(5)),pos=[];
   for(var i=0;i<NC;i++){
     var y=1-(i/(NC-1))*2,r=Math.sqrt(1-y*y),th=phi*i;
-    pos.push(new THREE.Vector3(Math.cos(th)*r*13,y*9,Math.sin(th)*r*13));
+    pos.push(new THREE.Vector3(Math.cos(th)*r*14,y*10,Math.sin(th)*r*14));
   }
   var ptGeo=new THREE.BufferGeometry().setFromPoints(pos);
-  var ptMat=new THREE.PointsMaterial({map:sprTex,size:.85,transparent:true,opacity:.5,depthWrite:false});
+  var ptMat=new THREE.PointsMaterial({color:0x00e5ff,size:.16,transparent:true,opacity:.55});
   scene.add(new THREE.Points(ptGeo,ptMat));
-  // Larger bright accent nodes every 4th
-  var corePos=pos.filter(function(_,i){return i%4===0;});
-  var coreGeo=new THREE.BufferGeometry().setFromPoints(corePos);
-  var coreMat=new THREE.PointsMaterial({map:sprTex,size:1.5,transparent:true,opacity:.75,depthWrite:false});
-  scene.add(new THREE.Points(coreGeo,coreMat));
-  // Edges — cyan wireframe mesh
+  // Edges
   var lv=[];
   for(var i=0;i<NC;i++){
     var near=[];
-    for(var j=0;j<NC;j++){if(i!==j&&pos[i].distanceTo(pos[j])<5.2)near.push(j);}
+    for(var j=0;j<NC;j++){if(i!==j&&pos[i].distanceTo(pos[j])<5.4)near.push(j);}
     near.slice(0,3).forEach(function(j){lv.push(pos[i].x,pos[i].y,pos[i].z,pos[j].x,pos[j].y,pos[j].z);});
   }
   var lGeo=new THREE.BufferGeometry();
   lGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lv),3));
-  scene.add(new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.13})));
-  // Short-range brighter white triangle edges
-  var lv2=[];
-  for(var i=0;i<NC;i++){
-    for(var j=i+1;j<NC;j++){if(pos[i].distanceTo(pos[j])<2.8)lv2.push(pos[i].x,pos[i].y,pos[i].z,pos[j].x,pos[j].y,pos[j].z);}
-  }
-  var lGeo2=new THREE.BufferGeometry();
-  lGeo2.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lv2),3));
-  scene.add(new THREE.LineSegments(lGeo2,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.07})));
-  var t=0;
+  scene.add(new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0x00e5ff,transparent:true,opacity:.07})));
+  // Scan sweep
+  var swGeo=new THREE.PlaneGeometry(36,.28);
+  var swMat=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.13,side:THREE.DoubleSide});
+  var sw=new THREE.Mesh(swGeo,swMat);scene.add(sw);
+  var sy=-11,sd=1,t=0;
   function tick(){
     requestAnimationFrame(tick);
     t+=.004;scene.rotation.y=t*.11;
+    sy+=sd*.1;if(sy>11||sy<-11)sd*=-1;sw.position.y=sy;
     renderer.render(scene,camera);
   }
   tick();
