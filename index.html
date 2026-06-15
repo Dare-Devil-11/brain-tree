@@ -91,12 +91,17 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
 .s-primary{background:rgba(255,75,75,.12);color:var(--accent);border:1px solid rgba(255,75,75,.2)}
 .s-prototype{background:rgba(107,114,128,.2);color:#9ca3af;border:1px solid rgba(107,114,128,.2)}
 /* ── D3 graph ── */
-.node circle{cursor:pointer}
-.node text{pointer-events:none;font-family:'SF Mono',monospace;fill:var(--text)}
-.link{stroke:rgba(0,229,255,.07);stroke-width:1}
-.link.hl{stroke:var(--accent);stroke-width:1.5;opacity:.55}
-.node.dim circle{opacity:.1}.node.dim text{opacity:.07}
-.node.hl circle{stroke:#fff;stroke-width:2}
+.node circle{cursor:pointer;filter:drop-shadow(0 0 4px currentColor)}
+.node text{pointer-events:none;font-family:'SF Mono',monospace;fill:rgba(0,229,255,.8)}
+.link{stroke:rgba(0,229,255,.28);stroke-width:1}
+.link.hl{stroke:#fff;stroke-width:2.5;opacity:1;filter:drop-shadow(0 0 6px #00e5ff)}
+.link.link-default{stroke:rgba(0,229,255,.28);stroke-width:1}
+.link.link-file-action{stroke:rgba(16,185,129,.75);stroke-width:1.5}
+.link.link-action-key{stroke:rgba(251,191,36,.8);stroke-width:1.6}
+.link.link-file-key{stroke:rgba(245,158,11,.55);stroke-width:1.2}
+.link.link-cross{stroke:rgba(0,229,255,.42);stroke-width:1.1}
+.node.dim circle{opacity:.06;filter:none!important}.node.dim text{opacity:.04}
+.node.hl circle{stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 12px #fff)!important}
 /* ── Tooltip ── */
 #tip{position:fixed;background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:8px;
   padding:7px 11px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;max-width:210px;line-height:1.6}
@@ -118,7 +123,9 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
 .cb-task{color:var(--muted)}
 /* ── Animations ── */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes tool-glow{0%,100%{filter:drop-shadow(0 0 4px currentColor);opacity:1}50%{filter:drop-shadow(0 0 11px currentColor);opacity:.82}}
+@keyframes node-glow{0%,100%{filter:drop-shadow(0 0 4px currentColor)}50%{filter:drop-shadow(0 0 10px currentColor)}}
+@keyframes tool-glow{0%,100%{filter:drop-shadow(0 0 5px currentColor);opacity:1}50%{filter:drop-shadow(0 0 14px currentColor);opacity:.85}}
+.node circle{animation:node-glow 3.5s ease-in-out infinite}
 .tool-node circle{animation:tool-glow 2.8s ease-in-out infinite}
 .node.rng-pick circle{animation:tool-glow .7s ease-in-out infinite!important;stroke:#fff!important;stroke-width:3!important}
 </style>
