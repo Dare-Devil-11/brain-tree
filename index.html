@@ -94,7 +94,7 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
 .node circle{cursor:pointer;filter:drop-shadow(0 0 4px currentColor)}
 .node text{pointer-events:none;font-family:'SF Mono',monospace;fill:rgba(0,229,255,.8)}
 .link{stroke:rgba(0,229,255,.28);stroke-width:1}
-.link.hl{stroke:#fff;stroke-width:2.5;opacity:1;filter:drop-shadow(0 0 6px #00e5ff)}
+.link.hl{stroke:rgba(0,229,255,.9);stroke-width:2;opacity:.9;filter:drop-shadow(0 0 4px #00e5ff)}
 .link.link-default{stroke:rgba(0,229,255,.28);stroke-width:1}
 .link.link-file-action{stroke:rgba(16,185,129,.75);stroke-width:1.5}
 .link.link-action-key{stroke:rgba(251,191,36,.8);stroke-width:1.6}
@@ -250,7 +250,7 @@ document.getElementById('search').addEventListener('input',e=>{var q=e.target.va
 function setV(v){document.getElementById('bf').classList.toggle('active',v==='f');document.getElementById('bt2').classList.toggle('active',v==='t');document.getElementById('gc').style.display=v==='f'?'block':'none';var tc=document.getElementById('tv');tc.style.display=v==='t'?'block':'none';if(v==='t'&&!tc.dataset.built){buildTree(tc);tc.dataset.built='1'}}
 function buildTree(c){function rn(n,d){var w=document.createElement('div');w.style.cssText='padding-left:'+(d*20+14)+'px;margin:2px 0';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:7px;padding:4px 7px;border-radius:6px;cursor:pointer';var dot=document.createElement('span');dot.textContent='●';dot.style.cssText='color:'+(n.color||'#888')+';font-size:8px';row.appendChild(dot);var lbl=document.createElement('span');lbl.textContent=n.label;lbl.style.cssText='font-size:12px;color:#f6f4f2';row.appendChild(lbl);if(n.graph_nodes){var cnt=document.createElement('span');cnt.textContent=n.graph_nodes;cnt.style.cssText='font-size:9px;color:#888;margin-left:auto';row.appendChild(cnt)}row.onmouseover=()=>row.style.background='rgba(255,255,255,.04)';row.onmouseout=()=>row.style.background='';row.onclick=()=>sel(n.id);w.appendChild(row);if(n.children)n.children.forEach(ch=>w.appendChild(rn(ch,d+1)));return w;}c.appendChild(rn(D,0));}
 window.addEventListener('resize',()=>{W=document.getElementById('main').clientWidth;H=document.getElementById('main').clientHeight;svg.attr('width',W).attr('height',H);sim.force('center',d3.forceCenter(W/2,H/2)).alpha(.1).restart();});
-setTimeout(()=>sel('root'),900);
+setTimeout(()=>sel('root'),3500);
 
 </script>
 <script>
