@@ -95,6 +95,11 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
 .node text{pointer-events:none;font-family:'SF Mono',monospace;fill:var(--text)}
 .link{stroke:rgba(0,229,255,.07);stroke-width:1}
 .link.hl{stroke:var(--accent);stroke-width:1.5;opacity:.55}
+.link.link-default{stroke:rgba(0,229,255,.07);stroke-width:1}
+.link.link-file-action{stroke:rgba(16,185,129,.35);stroke-width:1.2}
+.link.link-action-key{stroke:rgba(251,191,36,.42);stroke-width:1.3}
+.link.link-file-key{stroke:rgba(245,158,11,.22);stroke-width:1}
+.link.link-cross{stroke:rgba(0,229,255,.14);stroke-width:.8}
 .node.dim circle{opacity:.1}.node.dim text{opacity:.07}
 .node.hl circle{stroke:#fff;stroke-width:2}
 /* ── Tooltip ── */
@@ -139,7 +144,9 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
     <div class="pill">Nodes <span id="sn">—</span></div>
     <div class="pill">Projects <span>16</span></div>
     <div class="pill">Skills <span>580</span></div>
-    <div class="pill">Prompts <span>1</span></div>
+    <div class="pill" style="border-color:rgba(125,211,252,.3)">Scripts <span style="color:#7dd3fc">18</span></div>
+    <div class="pill" style="border-color:rgba(16,185,129,.3)">Actions <span style="color:#10b981">15</span></div>
+    <div class="pill" style="border-color:rgba(251,191,36,.3)">API Keys <span style="color:#fbbf24">7</span></div>
     <div class="pill">Graph nodes <span>19,961</span></div>
     <button id="rng-btn" onclick="randomTool()">&#127922; Random Tool</button>
     <div id="vtoggle">
@@ -160,6 +167,13 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono','Fira Code',mo
       <div class="mr"><div class="md" style="background:#38bdf8"></div><span>Infrastructure</span></div>
       <div class="mr"><div class="md" style="background:#fb923c"></div><span>Learned</span></div>
       <div class="mr"><div class="md" style="background:#8b5cf6"></div><span>Claude HowTo v2.1.160</span></div>
+      <div class="mr"><div class="md" style="background:#7dd3fc"></div><span>Scripts &amp; Files</span></div>
+      <div class="mr"><div class="md" style="background:#10b981"></div><span>Actions</span></div>
+      <div class="mr"><div class="md" style="background:#fbbf24"></div><span>API Keys</span></div>
+      <div style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.06);font-size:9px;color:rgba(255,255,255,.3)">─── edges ───</div>
+      <div class="mr"><div class="md" style="background:rgba(16,185,129,.6);border-radius:0;height:2px"></div><span>file→action</span></div>
+      <div class="mr"><div class="md" style="background:rgba(251,191,36,.6);border-radius:0;height:2px"></div><span>action→key</span></div>
+      <div class="mr"><div class="md" style="background:rgba(245,158,11,.4);border-radius:0;height:2px"></div><span>file→key</span></div>
     </div>
   </div>
   <div id="detail"><p class="de">Click any node<br>to see details</p></div>
