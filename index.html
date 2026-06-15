@@ -297,5 +297,90 @@ setTimeout(()=>sel('root'),900);
 })();
 
 </script>
+
+<!-- ── VERSION SYNC + LIVE EDIT SYSTEM ───────────────────── -->
+<script>
+(function(){
+  // Embed current version timestamp — deploy script stamps this on every push
+  var VERSION = '20260615-104220';
+  var GITHUB_RAW = 'https://raw.githubusercontent.com/Dare-Devil-11/brain-tree/main/index.html';
+  var GITHUB_EDIT = 'https://github.com/Dare-Devil-11/brain-tree/edit/main/index.html';
+  var GITHUB_REPO = 'https://github.com/Dare-Devil-11/brain-tree';
+
+  // ── Inject UI ──────────────────────────────────────────
+  var css = `
+    #sync-bar{position:fixed;top:0;left:0;right:0;z-index:9999;
+      background:linear-gradient(90deg,#1a0a00,#2a1000);
+      border-bottom:1px solid rgba(255,140,0,.35);
+      padding:8px 16px;display:none;align-items:center;gap:10px;
+      font-family:'SF Mono','Fira Code',monospace;font-size:11px;color:#ffb347}
+    #sync-bar .sb-ico{font-size:14px;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #sync-bar .sb-msg{flex:1}
+    #sync-bar .sb-btn{padding:4px 12px;border-radius:4px;border:1px solid #ff8c00;
+      background:rgba(255,140,0,.15);color:#ffb347;cursor:pointer;font-family:inherit;font-size:10px;
+      transition:all .15s;letter-spacing:.05em}
+    #sync-bar .sb-btn:hover{background:rgba(255,140,0,.3);color:#fff}
+    #sync-bar .sb-close{opacity:.5;cursor:pointer;padding:0 4px;font-size:14px;transition:opacity .15s}
+    #sync-bar .sb-close:hover{opacity:1}
+    #edit-fab{position:fixed;bottom:46px;right:14px;z-index:9998;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+    .fab-btn{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:6px;
+      background:rgba(8,10,22,.85);backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.55);
+      cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:.08em;
+      text-decoration:none;transition:all .15s;white-space:nowrap}
+    .fab-btn:hover{border-color:rgba(0,229,255,.4);color:#00e5ff;background:rgba(0,229,255,.06)}
+    .fab-dot{width:5px;height:5px;border-radius:50%}
+    #version-tag{position:fixed;bottom:46px;left:18px;z-index:9998;
+      font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.15);
+      font-family:'SF Mono',monospace;text-transform:uppercase}
+  `;
+  var style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  var bar = document.createElement('div');
+  bar.id = 'sync-bar';
+  bar.innerHTML = '<span class="sb-ico">⟳</span><span class="sb-msg">New version available — updated offline</span><button class="sb-btn" onclick="location.reload()">RELOAD NOW</button><span class="sb-close" onclick="this.parentElement.style.display=\'none\'">✕</span>';
+  document.body.appendChild(bar);
+
+  var fab = document.createElement('div');
+  fab.id = 'edit-fab';
+  fab.innerHTML =
+    '<a class="fab-btn" href="'+GITHUB_EDIT+'" target="_blank"><div class="fab-dot" style="background:#34d399"></div>EDIT ON GITHUB</a>'+
+    '<a class="fab-btn" href="'+GITHUB_REPO+'" target="_blank"><div class="fab-dot" style="background:#818cf8"></div>VIEW REPO</a>';
+  document.body.appendChild(fab);
+
+  var vtag = document.createElement('div');
+  vtag.id = 'version-tag';
+  vtag.textContent = 'v ' + (VERSION !== '20260615-104220' ? VERSION : 'local');
+  document.body.appendChild(vtag);
+
+  // ── Version poll: every 60s fetch raw and compare VERSION string ──
+  function checkVersion(){
+    fetch(GITHUB_RAW + '?_=' + Date.now(), {cache:'no-store'})
+      .then(function(r){return r.text();})
+      .then(function(html){
+        var m = html.match(/var VERSION = '([^']+)'/);
+        if(!m) return;
+        var remoteVer = m[1];
+        var localVer  = VERSION;
+        // If remote is newer and both are real timestamps
+        if(remoteVer !== '20260615-104220' && remoteVer !== localVer){
+          bar.style.display = 'flex';
+          bar.querySelector('.sb-ico').style.animation = 'none';
+          bar.querySelector('.sb-ico').textContent = '↑';
+          bar.querySelector('.sb-msg').textContent = 'New version deployed (' + remoteVer + ') — click to reload';
+        }
+      })
+      .catch(function(){/* offline or CORS — silent */});
+  }
+
+  // Poll every 60s (matches deploy interval)
+  setInterval(checkVersion, 60000);
+  // First check after 5s
+  setTimeout(checkVersion, 5000);
+})();
+</script>
 </body>
 </html>
